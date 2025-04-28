@@ -1,0 +1,5 @@
+name,price,volume,status,total_value
+Tesla,185.5,12000,Stagnující,2226000.0
+Apple,145.2,15000,Stagnující,2178000.0
+Google,2750.3,5000,Drahá,13751500.0
+Amazon,3500.0,7000,Drahá,24500000.0
