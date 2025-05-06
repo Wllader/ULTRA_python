@@ -56,13 +56,15 @@ def merge_sort(L:list[float]) -> list[float]:
     i, j = 0, 0
     while i < len(r) or j < len(l):
         if i >= len(r):
-            for k in range(j, len(l)):
-                _l.append(l[k])
+            # for k in range(j, len(l)):
+            #     _l.append(l[k])
+            _l += l
             j = len(l)
 
         if j >= len(l):
-            for k in range(i, len(r)):
-                _l.append(r[k])
+            # for k in range(i, len(r)):
+            #     _l.append(r[k])
+            _l += r
             i = len(r)
 
         if i >= len(r) and j >= len(l):
