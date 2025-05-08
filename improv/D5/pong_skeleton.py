@@ -36,7 +36,7 @@ ball = pg.Rect(
 
 # Speeds
 paddle_speed = 7
-ball_speed = np.array([0, 5])
+ball_speed = np.array([5, 5])
 
 #! Game loop
 
