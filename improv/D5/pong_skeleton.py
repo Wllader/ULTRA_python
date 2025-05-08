@@ -59,21 +59,18 @@ while running:
 
     # Player2 AI:
     player2.centery = ball.centery
-    if player2.top <= 0:
-        player2.top = 0
-    if player2.bottom >= HEIGHT:
-        player2.bottom = HEIGHT
-
-    if player1.top <= 0:
-        player1.top = 0
-    if player1.bottom >= HEIGHT:
-        player1.bottom = HEIGHT
 
     # Move ball
     ball.x += ball_speed[0] * dt
     ball.y += ball_speed[1] * dt
 
     # Collisions:
+    for p in [player1, player2]:
+        if p.top <= 0:
+            p.top = 0
+        if p.bottom >= HEIGHT:
+            p.bottom = HEIGHT
+
     if ball.top <= 0 or ball.bottom >= HEIGHT:
         ball_speed[1] *= -1
 
