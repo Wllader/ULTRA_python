@@ -95,4 +95,7 @@ def checkerboard3(w, h, px):
     img = np.tile(tile, (h, w)) # Wrong height and width calculation
     return img
 
-show(checkerboard3(5, 3, 20))
+# show(checkerboard3(5, 3, 20))
+
+plt.hist(img_gs.flatten(), 100)
+plt.show()
