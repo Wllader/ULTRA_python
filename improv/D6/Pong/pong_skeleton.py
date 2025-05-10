@@ -1,5 +1,5 @@
 import pygame as pg, numpy as np
-from PongEntities import PongPlayer
+from PongEntities import PongPlayer, PongBot, PongBall
 
 # Initialize
 pg.init()
@@ -18,8 +18,8 @@ PADDLE_DIMS = PW, PH = np.array([10, 100])
 BALL_SIZE = np.array([16, 16])
 
 # Speeds
-paddle_speed = np.array([0, 7])
-ball_speed = np.array([5, 5])
+paddle_speed = np.array([0, 5])
+ball_speed = np.array([5, 7])
 
 # Positions
 player1 = PongPlayer(
@@ -30,7 +30,7 @@ player1 = PongPlayer(
     WHITE
 )
 
-player2 = PongPlayer(
+player2 = PongBot(
     screen,
     PADDLE_DIMS,
     np.array([WIDTH - 50 - PW, CENTER[1]]),
@@ -38,12 +38,29 @@ player2 = PongPlayer(
     WHITE
 )
 
-ball = pg.Rect(
-    *((SIZE - BALL_SIZE) // 2),
-    *BALL_SIZE
+ball = PongBall(
+    screen,
+    BALL_SIZE,
+    CENTER,
+    ball_speed,
+    WHITE
 )
 
+player2.ball = ball
 
+# Groups
+g_entities = pg.sprite.Group(
+    player1,
+    player2,
+    ball
+)
+
+g_paddles = pg.sprite.Group(
+    player1,
+    player2
+)
+
+ball.bounce_group = g_paddles
 
 #! Game loop
 
@@ -57,33 +74,14 @@ while running:
         if event.type == pg.QUIT: 
             running = False
 
-    for p in [player1, player2]:
-        p.update(dt)
-
-    # Player2 AI:
-    #! player2.centery = ball.centery
-
-    # Move ball
-    ball.x += ball_speed[0] * dt
-    ball.y += ball_speed[1] * dt
-
-    if ball.top <= 0 or ball.bottom >= HEIGHT:
-        ball_speed[1] *= -1
-
-    if ball.left <= 0 or ball.right >= WIDTH:
-        ball.center = CENTER
-        ball_speed[0] *= -1
-
-    if ball.colliderect(player1.rect) or ball.colliderect(player2.rect):
-        ball_speed[0] *= -1
+    # Update game state
+    g_entities.update(dt=dt)
 
     # Drawing
     screen.fill(BLACK)
-    for p in [player1, player2]:
-        pg.draw.rect(screen, WHITE, p.rect)
-
-    pg.draw.ellipse(screen, WHITE, ball)
     pg.draw.aaline(screen, WHITE, (CENTER[0], 0), (CENTER[0], HEIGHT))
+   
+    g_entities.draw(screen)
 
     pg.display.flip()
     dt = clock.tick(144) / 10
