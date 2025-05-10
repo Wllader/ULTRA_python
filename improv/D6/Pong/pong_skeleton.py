@@ -1,5 +1,6 @@
 import pygame as pg, numpy as np
 from PongEntities import PongPlayer, PongBot, PongBall
+from GameController import GameController
 
 # Initialize
 pg.init()
@@ -8,10 +9,12 @@ pg.init()
 SIZE = WIDTH, HEIGHT = np.array([800, 600])
 CENTER = SIZE / 2
 screen = pg.display.set_mode(SIZE)
+pg.display.set_caption("Pong!")
 
 # Colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
+font = pg.font.Font("freesansbold.ttf", 32)
 
 # Game objects
 PADDLE_DIMS = PW, PH = np.array([10, 100])
@@ -27,7 +30,7 @@ player1 = PongPlayer(
     PADDLE_DIMS,
     np.array([50, CENTER[1]]),
     paddle_speed,
-    WHITE
+    (0, 255, 0)
 )
 
 player2 = PongBot(
@@ -35,7 +38,7 @@ player2 = PongBot(
     PADDLE_DIMS,
     np.array([WIDTH - 50 - PW, CENTER[1]]),
     paddle_speed,
-    WHITE
+    (255, 0, 0)
 )
 
 ball = PongBall(
@@ -46,6 +49,7 @@ ball = PongBall(
     WHITE
 )
 
+#player1.ball = ball
 player2.ball = ball
 
 # Groups
@@ -66,6 +70,14 @@ ball.bounce_group = g_paddles
 
 clock = pg.time.Clock()
 dt = 0
+gc = GameController()
+
+def get_score():
+    score_text = f"{gc.get_score(0)}   {gc.get_score(1)}"
+    score = font.render(score_text, True, WHITE)
+    score_rect = score.get_rect(center=CENTER)
+
+    return score, score_rect
 
 running = True
 while running:
@@ -80,7 +92,8 @@ while running:
     # Drawing
     screen.fill(BLACK)
     pg.draw.aaline(screen, WHITE, (CENTER[0], 0), (CENTER[0], HEIGHT))
-   
+    screen.blit(*get_score())
+
     g_entities.draw(screen)
 
     pg.display.flip()
