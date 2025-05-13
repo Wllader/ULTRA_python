@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from abc import ABC
 from GameController import GameController
+from SpriteSheet import SpriteSheet
 
 
 class PongEntity(pg.sprite.Sprite, ABC):
@@ -11,13 +12,19 @@ class PongEntity(pg.sprite.Sprite, ABC):
             init_center_pos:np.ndarray,
             speed:np.ndarray,
             color:np.ndarray,
+            sprite_sheet:SpriteSheet = None,
             *groups
         ):
         super().__init__(*groups)
 
+        self.sheet = sprite_sheet
         self.screen = screen
         self.draw_func = pg.draw.rect
         self.image = pg.Surface(size)
+        if sprite_sheet is not None:
+            self.image = self.sheet.get_image(sprite_sheet.init_frame)
+            self.draw_func = lambda **kwarg: ()
+
         self.rect = self.image.get_rect(center=init_center_pos)
         self.color = color
         self.speed = speed
@@ -35,6 +42,8 @@ class PongEntity(pg.sprite.Sprite, ABC):
     @color.setter
     def color(self, value:np.ndarray):
         self._color = value
+        if self.sheet:
+            return
         self.image.fill((0, 0, 0, 0))
         self.draw_func(self.image, value, self.image.get_rect())
 
@@ -63,10 +72,16 @@ class PongPlayer(PongEntity):
         super().update()
 
 class PongBot(PongEntity):
-    def __init__(self, screen, size, init_center_pos, speed, color, *groups):
+    def __init__(self, screen, size, init_center_pos, speed, color, sprite_sheet:SpriteSheet=None, *groups):
         self.ball:PongBall = None
 
-        super().__init__(screen, size, init_center_pos, speed, color, *groups)
+        super().__init__(screen,
+                         size, 
+                         init_center_pos, 
+                         speed, 
+                         color,
+                         sprite_sheet,
+                         *groups)
     
     def update(self):
         #todo calculate exact location that the ball will hit
@@ -104,7 +119,7 @@ class PongBot(PongEntity):
 class PongBotAdvanced(PongBot):
     def update(self):
         if self.ball_moving_towards_me():
-            paddle_axis = 60 if self.ball.speed[0] < 0 else self.screen.get_width() - 60
+            paddle_axis = 68 if self.ball.speed[0] < 0 else self.screen.get_width() - 68
             y = self.intersect(self.ball.speed, self.ball.rect.center, paddle_axis)
             y = self.bound(y, 0, self.screen.get_height())
             self._drift_towards(np.array([0, y]))
