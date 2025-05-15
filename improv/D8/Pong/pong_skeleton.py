@@ -28,8 +28,13 @@ BALL_SIZE = np.array([16, 16])
 paddle_speed = np.array([0, 5])
 ball_speed = np.array([5, 7])
 
+#todo Více míčků v jedné hře
+#todo Pohyb míčku definovaný jednotkovým vektorem (np.linalg.norm(směrový_vektor)) a koeficientem rychlosti
+#todo změna úhlu odrazu a rychlosti míčku při kontaktu s pohybujícím se pádlem
+#todo náhodně se objevující power-upy, které po sebrání míčkem míček zrychlí/zpomalí/změní směr/jinak ovlivní hru
+
 # Positions
-player1 = PongBotAdvanced(
+p1 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     np.array([50, CENTER[1]]),
@@ -42,7 +47,7 @@ player1 = PongBotAdvanced(
     )
 )
 
-player2 = PongBotAdvanced(
+p2 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     np.array([WIDTH - 50 - PW, CENTER[1]]),
@@ -56,30 +61,56 @@ player2 = PongBotAdvanced(
     )
 )
 
+p3 = PongBotAdvanced(
+    screen,
+    PADDLE_DIMS,
+    CENTER,
+    np.array([0, 3]),
+    (255, 0, 0),
+    SpriteSheet(
+        "Sprites/Paddle.png",
+        np.array([5, 50]),
+        2,
+        init_frame=1
+    )
+)
+
+
 ball = PongBall(
     screen,
     BALL_SIZE,
     CENTER,
     ball_speed,
-    WHITE
+    WHITE,
+    SpriteSheet(
+        "Sprites/Ball.png",
+        np.array([16, 16]),
+        1,
+        BLACK
+    )
 )
 
-player1.ball = ball
-player2.ball = ball
+p1.ball = ball
+p2.ball = ball
+p3.ball = ball
 
 # Groups
 g_entities = pg.sprite.Group(
-    player1,
-    player2,
+    p1,
+    p2,
+    p3,
     ball
 )
 
 g_paddles = pg.sprite.Group(
-    player1,
-    player2
+    p1,
+    p2,
+    p3
 )
 
 ball.bounce_group = g_paddles
+ball.sheet.add_animation("shimmer", list(range(4)))
+ball.sheet.set_animation("shimmer")
 
 #! Game loop
 

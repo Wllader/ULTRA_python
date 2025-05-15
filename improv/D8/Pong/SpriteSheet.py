@@ -42,12 +42,17 @@ class SpriteSheet:
     @property
     def frame(self):
         if not self.animation_state:
-            return self.get_image(self.frame_index)
+            return self.get_image(self.init_frame)
         
         self.current_frame_time += self.clock.tick()
-        while self.current_frame_time >= self.frame_time:
-            self.current_frame_time -= self.frame_time
-            self.frame_index = (self.frame_index + 1) % self.current_animation_lenght
+        if self.current_frame_time >= self.frame_time:
+            index_difference = self.current_frame_time // self.frame_time
+            self.current_frame_time %= self.frame_time
+            self.frame_index = (self.frame_index + index_difference) % self.current_animation_lenght
+
+        # while self.current_frame_time >= self.frame_time:
+        #     self.current_frame_time -= self.frame_time
+        #     self.frame_index = (self.frame_index + 1) % self.current_animation_lenght
         
         return self.animations[self.animation_state][self.frame_index]
 
