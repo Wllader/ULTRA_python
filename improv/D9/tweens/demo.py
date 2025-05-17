@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from GameController import GameController
 from sqaure import Square
+from tween import Tween
 
 pg.init()
 SIZE = W, H = np.array([600, 600])
@@ -36,7 +37,11 @@ while running:
     c, mk_held = click(0, mk_held)
     if c:
         g_squares.add(
-            Square(screen, pg.mouse.get_pos())
+            Square(
+                screen,
+                pg.mouse.get_pos(),
+                tween=Tween(1000, lambda t: t**6)
+            )
         )
 
     g_squares.update()

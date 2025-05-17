@@ -1,9 +1,10 @@
 import pygame as pg, numpy as np
 from GameController import GameController
+from tween import Tween
 
 
 class Square(pg.sprite.Sprite):
-    def __init__(self, screen:pg.Surface, init_center_pos:np.ndarray, *groups):
+    def __init__(self, screen:pg.Surface, init_center_pos:np.ndarray, tween:Tween = None, *groups):
         super().__init__(*groups)
         self.gc = GameController()
 
@@ -16,10 +17,7 @@ class Square(pg.sprite.Sprite):
         self.rect = self._image.get_rect(center=init_center_pos)
         self.mk_held = [False, False, False]
 
-        self.total_time = 1000
-        self.current_time = 0
-
-        self.tween = ...
+        self.tween = tween if tween else Tween(1000)
 
     @property
     def image(self):
@@ -29,7 +27,7 @@ class Square(pg.sprite.Sprite):
     @property
     def color(self):
         if (self._color != self._new_color).all():
-            c, s = self.get_state(self._new_color)
+            c, s = self.tween.get_state(self._color, self._new_color)
             if s:
                 self._color = self._new_color
                 return self._new_color
@@ -39,16 +37,16 @@ class Square(pg.sprite.Sprite):
         else:
             return self._color
 
-    def update(self, *args, **kwargs):
-
+    def update(self):
         if self.clicked(1):
             self.kill()
 
         if self.clicked(2):
             self._new_color = np.random.randint(0, 256, 3)
-            self.current_time = 0
+            self.tween.reset()
 
-        return super().update(*args, **kwargs)
+
+        return super().update()
     
     def clicked(self, button):
         if (p := pg.mouse.get_pressed()[button]) and not self.mk_held[button] and self.rect.collidepoint(pg.mouse.get_pos()):
@@ -57,12 +55,5 @@ class Square(pg.sprite.Sprite):
         elif not p:
             self.mk_held[button] = False
             return False
-        
-    def get_state(self, B):
-        self.current_time += self.gc.dt
-        t = np.min((1, self.current_time / self.total_time))
-
-        output = t*B + (1-t)*self._color
-        return output, t >= 1
 
         
