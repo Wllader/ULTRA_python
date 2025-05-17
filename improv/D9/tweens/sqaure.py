@@ -14,10 +14,31 @@ class Square(pg.sprite.Sprite):
         self._image = pg.Surface((50, 50))
         self._image.fill(self._color)
 
-        self.rect = self._image.get_rect(center=init_center_pos)
+        self._center_pos = np.array(init_center_pos)
+        self._new_center_pos = self._center_pos.copy()
+        self._rect = self._image.get_rect(center=self._center_pos)
         self.mk_held = [False, False, False]
 
         self.tween = tween if tween else Tween(1000)
+
+    @property
+    def rect(self):
+        self._rect = self._image.get_rect(center=self.position)
+        return self._rect
+
+    @property
+    def position(self):
+        if (self._center_pos != self._new_center_pos).all():
+            p, s = self.tween.get_state(self._center_pos, self._new_center_pos)
+            if s:
+                self._center_pos = self._new_center_pos
+                return self._new_center_pos
+            
+            return p
+        
+        else:
+            return self._center_pos
+        
 
     @property
     def image(self):
@@ -45,7 +66,6 @@ class Square(pg.sprite.Sprite):
             self._new_color = np.random.randint(0, 256, 3)
             self.tween.reset()
 
-
         return super().update()
     
     def clicked(self, button):
@@ -55,5 +75,9 @@ class Square(pg.sprite.Sprite):
         elif not p:
             self.mk_held[button] = False
             return False
+        
+    def change_position(self, pos):
+        self._new_center_pos = np.array(pos)
+        self.tween.reset()
 
         

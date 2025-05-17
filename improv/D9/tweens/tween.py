@@ -16,8 +16,9 @@ class Tween:
         progress = clip(self.current_time / self.total_time, 0, 1)
 
         t = clip(self.tween(progress), 0, 1)
+        # print(f"{t=}, {A=}, {B=}")
         output = t*B + (1-t)*A
-        print(f"{progress=}\t{t=}\t{output=}")
+        # print(f"{progress=}\t{t=}\t{output=}")
 
         return output, t >= 1
     

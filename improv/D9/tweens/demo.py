@@ -9,18 +9,18 @@ screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("Demo")
 CENTER = SIZE / 2
 
-mk_held = False
-def click(button, held:bool):
+mk_held = [False, False, False]
+def click(button):
     clicked = pg.mouse.get_pressed()[button]
     out = False
-    if clicked and not held:
-        held = True
+    if clicked and not mk_held[button]:
+        mk_held[button] = True
         out = True
 
     if not clicked:
-        held = False
+        mk_held[button] = False
 
-    return out, held
+    return out
 
 g_squares = pg.sprite.Group()
 
@@ -34,15 +34,28 @@ while running:
     #Updating
     keys = pg.key.get_pressed()
     mkeys = pg.mouse.get_pressed()
-    c, mk_held = click(0, mk_held)
-    if c:
+    if click(0):
         g_squares.add(
             Square(
                 screen,
                 pg.mouse.get_pos(),
-                tween=Tween(1000, lambda t: t**6)
+                tween=Tween.EaseInOutBounce(1000)
             )
         )
+
+    if click(2):
+        mpos = pg.mouse.get_pos()
+
+        clicked_squares = np.array(
+            [ s.rect.collidepoint(mpos) for s in g_squares ],
+            dtype=bool
+        )
+
+        if (~clicked_squares).all():
+            for s in g_squares:
+                s:Square
+                s.change_position(mpos)
+
 
     g_squares.update()
 
