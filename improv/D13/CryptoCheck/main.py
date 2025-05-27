@@ -21,13 +21,14 @@ class CryptoCheck(ctk.CTk):
         name = self.main_frame.symbol
 
         tab = self.tab_view.add(name)
-        pf = PlotFrame(tab, name, self.main_frame.days)
-        # todo Check if ticker exist and do not create tab if it doesn't
-        pf.update_plot(name)
+        pf = PlotFrame(tab, name, self.main_frame.days, self.main_frame.type.get())
+        if not pf.update_plot(name):
+            self.tab_view.delete(name)
+            pf.destroy()
+            return
+
         pf.pack()
-
         self.call_on_closing.append(pf.on_closing)
-
         self.tab_view.set(name)
 
     def on_closing(self):

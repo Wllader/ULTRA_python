@@ -1,5 +1,11 @@
 import customtkinter as ctk
 from typing import Callable
+from enum import StrEnum, auto
+
+class TickerType(StrEnum):
+    COIN = auto()
+    SHARE = auto()
+
 
 class InputFrame(ctk.CTkFrame):
     def __init__(self, master, fetch:Callable, **kwargs):
@@ -16,7 +22,13 @@ class InputFrame(ctk.CTkFrame):
         self.days_entry.grid(row=1, column=1, padx=10, pady=10)
 
         self.fetch_button = ctk.CTkButton(self, text="Fetch Data and Plot", command=self.fetch)
-        self.fetch_button.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
+        self.fetch_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
+
+        self.type = ctk.StringVar(value=TickerType.COIN)
+        type_frame = ctk.CTkFrame(self)
+        ctk.CTkRadioButton(type_frame, text="Coin", variable=self.type, value=TickerType.COIN).grid(row=0, column=0)
+        ctk.CTkRadioButton(type_frame, text="Share", variable=self.type, value=TickerType.SHARE).grid(row=0, column=1)
+        type_frame.grid(row=2, column=0, columnspan=2, padx=10, pady=10)
 
     @property
     def symbol(self):
@@ -29,6 +41,6 @@ class InputFrame(ctk.CTkFrame):
 
 if __name__ == "__main__":
     app = ctk.CTk()
-    InputFrame(app).pack()
+    InputFrame(app, lambda: print("Fetch!")).pack()
 
     app.mainloop()
