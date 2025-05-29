@@ -10,17 +10,19 @@ import sqlite3
 
 
 class Fetcher(ABC):
-    def __init__(self, api_endpoint:str, cache_db:str, expiration_s:int=180, log_level=logging.CRITICAL):
+    def __init__(self, cache_db:str, expiration_s:int=180, log_level=logging.CRITICAL):
         super().__init__()
 
         self.expiration = expiration_s
         self.cache_db = cache_db
-        self.endpoint = api_endpoint
         logging.basicConfig(level=log_level)
 
     @abstractmethod
     def get(self, tick, params) -> pd.DataFrame:
         pass
+
+    def get_json(self, tick, params) -> dict:
+        return self.get(tick, params).to_dict()
 
     def init_db(self, conn:sqlite3.Connection):
         cursor = conn.cursor()
@@ -48,8 +50,8 @@ class Fetcher(ABC):
 
 
 class CryptoFetcher(Fetcher):
-    def fetch_data(self, params:dict = None):
-        response = requests.get(self.endpoint, params)
+    def fetch_data(self, endpoint, params:dict = None):
+        response = requests.get(endpoint, params)
         logging.debug("Fetched raw!")
         return response.json()
     
@@ -95,13 +97,15 @@ class CryptoFetcher(Fetcher):
 
     @override
     def get(self, tick, params) -> pd.DataFrame:
+        endpoint = f"https://api.coingecko.com/api/v3/coins/{tick}/market_chart"
+
         with sqlite3.connect(self.cache_db) as conn:
             self.update_db(conn)
 
             if (d := self.get_cached(conn, tick, params)) is not None:
                 return d
 
-            data = self.fetch_data(params)
+            data = self.fetch_data(endpoint, params)
             data = self.format_data(data)
             self.cache_data(conn, tick, data, params)
 
