@@ -81,11 +81,9 @@ class Button(Widget):
         self.fg = fg
         self.command = command
         
-        self.mouse_held = np.zeros(3, dtype=bool)
-
     @property
     def image(self):
-        self._image.fill(self.bg)
+        self._image.fill(self.bg * (1 if not self.mouse_held[0] else 0.8))
         label = self.font.render(self.text, True, self.fg)
         pos = self.align_center(self.size, label.get_rect().size)
         self._image.blit(label, pos)
