@@ -22,7 +22,7 @@ class Widget(pg.sprite.Sprite):
 
         self.mouse_held = np.zeros(3, dtype=bool)
 
-    def update():
+    def update(self, event=None):
         super().update()
 
     @property
