@@ -39,7 +39,7 @@ while running:
             Square(
                 screen,
                 pg.mouse.get_pos(),
-                tween=Tween.EaseInOutBounce(1000)
+                tween=Tween.EaseInOutCubic(1000)
             )
         )
 
