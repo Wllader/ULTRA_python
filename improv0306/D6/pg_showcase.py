@@ -24,9 +24,10 @@ p2 = Moving_Square(
     np.array([400, 200]),
     np.array([50, 50]),
     GREY*160,
-    np.array([0, 5])
+    np.array([10, 10])
 )
 p2.collission_group.add(player)
+player.collission_group.add(p2)
 
 
 players = pg.sprite.Group(
@@ -55,7 +56,7 @@ while running:
     players.draw(screen)
 
     pg.display.flip()
-    dt = clock.tick(60) / 10
+    dt = clock.tick(10) / 10
 
 
 pg.quit()
