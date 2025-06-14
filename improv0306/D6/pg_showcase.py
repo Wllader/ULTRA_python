@@ -1,6 +1,7 @@
 # Import a základní inicializace
 import pygame as pg, numpy as np
 from square import Square, Moving_Square
+from game_controller import GameController
 
 pg.init()
 
@@ -12,6 +13,7 @@ BLACK = GREY * 0
 SIZE = W, H = np.array([800, 600])
 screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("My first game")
+gc = GameController()
 
 player = Square(
     screen, 
@@ -24,7 +26,7 @@ p2 = Moving_Square(
     np.array([400, 200]),
     np.array([50, 50]),
     GREY*160,
-    np.array([10, 10])
+    np.array([7, 5])
 )
 p2.collission_group.add(player)
 player.collission_group.add(p2)
@@ -36,8 +38,6 @@ players = pg.sprite.Group(
 
 
 #! Game loop
-clock = pg.time.Clock()
-dt = 0
 running = True
 while running:
     # Event-management
@@ -47,7 +47,7 @@ while running:
 
 
     # Update
-    players.update(dt=dt)
+    players.update()
 
 
     # Vykreslování (Draw)
@@ -56,7 +56,7 @@ while running:
     players.draw(screen)
 
     pg.display.flip()
-    dt = clock.tick(10) / 10
+    gc.tick(144, 10)
 
 
 pg.quit()
