@@ -1,6 +1,6 @@
 # Import a základní inicializace
 import pygame as pg, numpy as np
-from square import Square
+from square import Square, Moving_Square
 
 pg.init()
 
@@ -13,20 +13,24 @@ SIZE = W, H = np.array([800, 600])
 screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("My first game")
 
+player = Square(
+    screen, 
+    np.array([200, 200]), 
+    np.array([50, 50])
+)
+
+p2 = Moving_Square(
+    screen,
+    np.array([400, 200]),
+    np.array([50, 50]),
+    GREY*160,
+    np.array([0, 5])
+)
+p2.collission_group.add(player)
+
 
 players = pg.sprite.Group(
-    Square(
-        screen, 
-        np.array([200, 200]), 
-        np.array([50, 50])
-    ),
-
-    Square(
-        screen,
-        np.array([400, 200]),
-        np.array([50, 50]),
-        GREY*160
-    )
+    player, p2
 )
 
 

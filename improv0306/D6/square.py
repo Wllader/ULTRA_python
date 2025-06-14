@@ -15,6 +15,10 @@ class Entity(pg.sprite.Sprite):
         self.color = color
 
     def update(self):
+        self.window_correction()
+
+
+    def window_correction(self):
         if self.rect.top < 0:
             self.rect.top = 0
         elif self.rect.bottom > (h := self.screen.get_height()):
@@ -24,7 +28,6 @@ class Entity(pg.sprite.Sprite):
             self.rect.left = 0
         elif self.rect.right > (w := self.screen.get_width()):
             self.rect.right = w
-
     
 class Square(Entity):
     def __init__(self, screen, init_pos, size, color = WHITE, speed:np.ndarray = np.array([5, 5])):
@@ -43,8 +46,32 @@ class Square(Entity):
         if keys[pg.K_s]:
             self.rect.y += self.speed[1] * dt
 
-        super().update()
+        self.window_correction()
 
 
-class Moving_Square(Entity):
-    
+class Moving_Square(Square):
+    def __init__(self, screen, init_pos, size, color=WHITE, speed = np.array([0, 5])):
+        super().__init__(screen, init_pos, size, color, speed)
+
+        self.collission_group = pg.sprite.Group()
+
+    def update(self, dt):
+        self.handle_collissions()
+
+        self.rect.x += self.speed[0] * dt
+        self.rect.y += self.speed[1] * dt
+
+        if self.rect.left <= 0 or self.rect.right >= self.screen.get_width():
+            self.speed[0] *= -1
+
+        if self.rect.top <= 0 or self.rect.bottom >= self.screen.get_height():
+            self.speed[1] *= -1
+
+        self.window_correction()
+
+
+    def handle_collissions(self):
+        if (o := self.rect.collideobjects(list(self.collission_group))) and o is not None:
+            o:Square
+
+            print("Collision!")
