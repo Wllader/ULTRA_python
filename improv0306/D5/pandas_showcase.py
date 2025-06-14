@@ -100,3 +100,22 @@ df = df[df.SkinThickness > 0]
 # print(
 #     df.groupby(["Age_Category", "Outcome"], observed=False)["Glucose"].mean()
 # )
+
+
+from statistics import linear_regression
+
+x = np.linspace(df.Age.min(), df.Age.max(), 2)
+
+lr = linear_regression(df.Age, df.Pregnancies)
+y_stat = lr.slope * x + lr.intercept
+
+slope_manual = df.Age.cov(df.Pregnancies) / df.Age.var()
+intercept_manual = df.Pregnancies.mean() - (df.Age.mean() * slope_manual)
+y_manual = slope_manual*x + intercept_manual
+
+
+plt.grid(True)
+plt.scatter(df.Age, df.Pregnancies, marker=".", c=df.Age, s=df.Pregnancies * 10 + 1)
+plt.plot(x, y_manual, c="orange")
+plt.plot(x, y_stat, c="green", ls="--", alpha=0.5)
+plt.show()
