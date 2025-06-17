@@ -1,5 +1,6 @@
 import pygame as pg, numpy as np
-from pong_entities import PongPlayer, PongBall
+from pong_entities import PongPlayer, PongBot, PongBall
+from game_controller import GameController
 
 # Initialize
 pg.init()
@@ -19,11 +20,11 @@ BLACK = GREY * 0
 PADDLE_DIMS = PW, PH = np.array([10, 100])
 BALL_SIZE = np.array([16, 16])
 
-paddle_speed = np.array([0, 7])
-ball_speed = np.array([5, 5])
+paddle_speed = np.array([0, 5])
+ball_speed = np.array([5, 7])
 
 
-p1 = PongPlayer(
+p1 = PongBot(
     screen,
     PADDLE_DIMS,
     np.array([55, CENTER[1]]),
@@ -31,7 +32,7 @@ p1 = PongPlayer(
     np.array([0, 255, 0])
 )
 
-p2 = PongPlayer(
+p2 = PongBot(
     screen,
     PADDLE_DIMS,
     np.array([W - 55, CENTER[1]]),
@@ -47,6 +48,9 @@ ball = PongBall(
     WHITE
 )
 
+p1.target = ball
+p2.target = ball
+
 g_paddles = pg.sprite.Group(
     p1, p2
 )
@@ -60,8 +64,7 @@ g_entities = pg.sprite.Group(
 
 #! Game loop
 
-clock = pg.time.Clock()
-dt = 0
+gc = GameController()
 running = True
 
 while running:
@@ -71,7 +74,7 @@ while running:
 
 
     # Update game state
-    g_entities.update(dt=dt)
+    g_entities.update()
 
 
     # Draw
@@ -79,7 +82,7 @@ while running:
     g_entities.draw(screen)
 
     pg.display.flip()
-    dt = clock.tick(144) / 10
+    gc.tick(144, 10)
 
 
 pg.quit()
