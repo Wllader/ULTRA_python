@@ -1,5 +1,5 @@
 import pygame as pg, numpy as np
-from pong_entities import PongPlayer, PongBot, PongBall
+from pong_entities import PongPlayer, PongBot, PongBall, PongBotAdvanced
 from game_controller import GameController
 from sprite_sheet import SpriteSheet
 
@@ -28,7 +28,7 @@ paddle_speed = np.array([0, 5])
 ball_speed = np.array([5, 7])
 
 
-p1 = PongBot(
+p1 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     np.array([55, CENTER[1]]),
@@ -42,7 +42,7 @@ p1 = PongBot(
     )
 )
 
-p2 = PongBot(
+p2 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     np.array([W - 55, CENTER[1]]),
