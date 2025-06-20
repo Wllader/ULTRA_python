@@ -1,7 +1,7 @@
 import pygame as pg, numpy as np
 from typing import override
 from abc import ABC
-from SpriteSheet import SpriteSheet
+from spritesheet_sr_fc import SpriteSheet
 from GameController import GameController
 
 from enum import Enum, auto

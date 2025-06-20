@@ -40,7 +40,7 @@ player1 = PongBotAdvanced(
         "Sprites/Paddle.png",
         np.array([5, 50]),
         2,
-        BLACK
+        color_key=BLACK
     )
 )
 
@@ -54,7 +54,7 @@ player2 = PongBotAdvanced(
         "Sprites/Paddle.png",
         np.array([5, 50]),
         2,
-        BLACK
+        color_key=BLACK
     ))
 
 ball = PongBall(
@@ -67,7 +67,7 @@ ball = PongBall(
         "Sprites/Ball.png",
         np.array([16, 16]),
         1,
-        BLACK
+        color_key=BLACK
     )
 )
 

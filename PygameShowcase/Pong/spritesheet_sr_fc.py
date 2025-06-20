@@ -1,6 +1,8 @@
 import pygame as pg, numpy as np
 
-class SpriteSheet:
+class SpriteSheet: #! Also is SingleRank
+    """Creates all frame's Surfaces for it's animations ahead of time and retrieves them when needed."""
+
     def __init__(self, path, size:np.ndarray, scale:float = 1., color_key = None):
         self.sheet = pg.image.load(path).convert_alpha()
         self.size = size
@@ -46,3 +48,6 @@ class SpriteSheet:
             self.current_frame_time -= self.frame_time
             self.frame_index = (self.frame_index + 1) % self.current_animation_lenght
         return self.animations[self.animation_state][self.frame_index]
+
+
+
