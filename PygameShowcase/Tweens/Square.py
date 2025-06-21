@@ -1,60 +1,109 @@
 import pygame as pg, numpy as np
-from GameController import GameController
-from Tweens import Tweens
+from game_controller import GameController
+from tween import Tween
 
-class Square(pg.sprite.Sprite):
-    def __init__(self, screen:pg.Surface, init_center_pos:np.ndarray, *groups, speed:float = None):
-        self.screen = screen
-        self.screen_size = np.array(self.screen.get_size())
-
-        self._color_old = np.array([0, 0, 0])
-        self._color_new = np.random.randint(0, 256, 3)
-        self.mid_trans = True
-
-        self.speed = np.abs(np.random.randn(1)) + 1 if speed is None else speed
-
-        self.tween = Tweens(1000)
-        self._image = pg.Surface((50, 50))
-        self._image.fill(self.color)
-        self.rect = self._image.get_rect(center=init_center_pos)
+class Entity(pg.sprite.Sprite):
+    def __init__(self, screen:pg.Surface, init_center_pos:np.ndarray):
+        super().__init__()
 
         self.gc = GameController()
-        self.mouse_held = [False, False, False]
 
-        super().__init__(*groups)
+        self.screen = screen
+        self._image = pg.Surface((50, 50))
+        self._rect = self._image.get_rect(center=init_center_pos)
+
+    @property
+    def rect(self):
+        return self._rect
+    
+    @property
+    def image(self):
+        return self._image
+
+class Square(Entity):
+    def __init__(self, screen, init_center_pos, tween:Tween = None):
+        super().__init__(screen, init_center_pos)
+
+        self._color = np.random.randint(0, 256, 3)
+        self._new_color = self._color.copy()
+
+        self._center_pos = np.array(init_center_pos)
+        self._new_center_pos = self._center_pos.copy()
+
+        self._image.fill(self._color)
+        self.tween = tween if tween is not None else Tween()
+
+        self.mk_held = np.zeros(3, dtype=bool)
 
     @property
     def image(self):
         self._image.fill(self.color)
         return self._image
-
+    
     @property
     def color(self):
-        if (self._color_old != self._color_new).all():
-            clr, state = self.tween.get_state(self._color_old, self._color_new)
-            if state:
-                self._color_old = self._color_new
+        if (self._color != self._new_color).any():
+            c, finished = self.tween.get_state(self._color, self._new_color)
+            if finished:
+                self._color = self._new_color
+                return self._new_color
 
-            return clr
+            return c
+        
         else:
-            return self._color_old
+            return self._color
+        
 
+    @property
+    def rect(self):
+        self._rect = self._image.get_rect(center=self.position)
+        return self._rect
+
+
+    @property
+    def position(self):
+        if (self._center_pos != self._new_center_pos).any():
+            p, finished = self.tween.get_state(self._center_pos, self._new_center_pos)
+            if finished:
+                self._center_pos = self._new_center_pos
+                return self._new_center_pos
+            
+            return p
+        
+        else:
+            return self._center_pos
+        
 
     def update(self):
-        self.rect.centery += self.speed * self.gc.dt
-
-        if self.rect.top > self.screen_size[1] + 10:
+        if self.click(1):
             self.kill()
 
         if self.click(2):
-            self._color_new = np.random.randint(0, 256, 3)
+            self._color = self.color #new
+            self._new_color = np.random.randint(0, 256, 3)
             self.tween.reset()
 
 
+        super().update()
+
+    def change_pos(self, new_pos:np.ndarray):
+        self._center_pos = self.position #new
+        self._new_center_pos = np.array(new_pos)
+        self.tween.reset()
+
+
     def click(self, button:int) -> bool:
-        if (p := pg.mouse.get_pressed()[button]) and not self.mouse_held[button] and self.rect.collidepoint(pg.mouse.get_pos()):
-            self.mouse_held[button] = True
+        p = pg.mouse.get_pressed()[button]
+        h = self.mk_held[button]
+        c = self._rect.collidepoint(pg.mouse.get_pos())
+
+        if p and not h and c:       # Pushed
+            self.mk_held[button] = True
             return True
-        elif not p:
-            self.mouse_held[button] = False
+        elif p and h and c:         # Held
+            return False
+        elif not p and h:           # Released
+            self.mk_held[button] = False
+            return False
+        elif p and not h and not c: # Missed
             return False

@@ -1,17 +1,37 @@
 import pygame as pg, numpy as np
-from GameController import GameController
-from Square import Square
+from game_controller import GameController
+from square import Square
+from tween import Tween
 
 pg.init()
-scr_size = np.array([600, 600])
-screen = pg.display.set_mode(scr_size)
-CENTER = scr_size / 2
 
-sq_size = np.array([50, 50])
-mk_held = False
+SIZE = W, H = np.array([600, 600])
+CENTER = SIZE / 2
 
-g_entities = pg.sprite.Group()
+screen = pg.display.set_mode(SIZE)
+pg.display.set_caption("Interpolation demo")
 
+GREY = np.ones(3, dtype=np.uint8)
+BLACK = GREY * 0
+WHITE = GREY * 255
+
+
+mk_held = np.zeros(3, dtype=bool)
+def click(button:int):
+    clicked = pg.mouse.get_pressed()[button]
+    out = False
+    if clicked and not mk_held[button]:
+        mk_held[button] = True
+        out = True
+
+    if not clicked:
+        mk_held[button] = False
+
+    return out
+
+g_squares = pg.sprite.Group()
+
+#! Game loop
 gc = GameController()
 running = True
 while running:
@@ -19,22 +39,41 @@ while running:
         if event.type == pg.QUIT:
             running = False
 
-    mk = pg.mouse.get_pressed()
-    if mk[0] and not mk_held:
-        mk_held = True
-        g_entities.add(
-            Square(screen, pg.mouse.get_pos(), speed=0)
+
+    # Update
+    if click(0):
+        g_squares.add(
+            Square(
+                screen,
+                np.array(pg.mouse.get_pos()),
+                Tween.EaseInOutCubic(500)
+            )
         )
 
-    if not mk[0]:
-        mk_held = False
+    if click(2):
+        mpos = pg.mouse.get_pos()
 
-    screen.fill((58, 58, 58))
+        clicked_squares = np.array(
+            [ s.rect.collidepoint(mpos) for s in g_squares ],
+            dtype=bool
+        )
 
-    g_entities.update()
-    g_entities.draw(screen)
+        #~ if (~clicked_squares).all():
+        if not clicked_squares.any():
+            for s in g_squares:
+                s:Square
+                s.change_pos(mpos)
+
+
+    g_squares.update()
+
+    # Draw
+    screen.fill(GREY * 56)
+
+    g_squares.draw(screen)
+
 
     pg.display.flip()
-    gc.tick(144, 2)
+    gc.tick(144)
 
 pg.quit()

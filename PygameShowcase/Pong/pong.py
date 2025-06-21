@@ -1,61 +1,62 @@
 import pygame as pg, numpy as np
-from PongEntities import *
+from pong_entities import PongPlayer, PongBot, PongBall, PongBotAdvanced
+from game_controller import GameController
+from spritesheet_sr_fc import SpriteSheet
 
 # Initialize
 pg.init()
 
 # Screen dimensions
-SIZE = WIDTH, HEIGHT = np.array([800, 600])
+SIZE = W, H = np.array([800, 600])
 CENTER = SIZE / 2
 screen = pg.display.set_mode(SIZE)
-pg.display.set_caption("Pong")
+pg.display.set_caption("Pong!")
 
 bg = pg.image.load("Sprites/Bg.png")
-bg = pg.transform.scale_by(bg, 0.78125)
-
+bg = pg.transform.scale_by(bg, .78125)
 
 # Colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+GREY = np.ones(3, dtype=np.uint8)
+WHITE = GREY * 255
+BLACK = GREY * 0
 
 # Game objects
 PADDLE_DIMS = PW, PH = np.array([10, 100])
-BALL_SIZE = np.array([15, 15])
-font = pg.font.Font('freesansbold.ttf', 32)
+BALL_SIZE = np.array([16, 16])
+font = pg.font.Font("freesansbold.ttf", 32)
 
-# Speeds
+
+
 paddle_speed = np.array([0, 5])
 ball_speed = np.array([5, 7])
 
 
-
-# Entities
-player1 = PongBotAdvanced(
+p1 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     np.array([55, CENTER[1]]),
     paddle_speed,
-    (0, 255, 0),
+    np.array([0, 255, 0]),
     SpriteSheet(
         "Sprites/Paddle.png",
         np.array([5, 50]),
-        2,
-        color_key=BLACK
+        2
     )
 )
 
-player2 = PongBotAdvanced(
+p2 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
-    np.array([WIDTH - 55, CENTER[1]]),
+    np.array([W - 55, CENTER[1]]),
     paddle_speed,
-    (255, 0, 0),
+    np.array([255, 0, 0]),
     SpriteSheet(
         "Sprites/Paddle.png",
         np.array([5, 50]),
         2,
-        color_key=BLACK
-    ))
+        1
+    )
+)
 
 ball = PongBall(
     screen,
@@ -66,67 +67,65 @@ ball = PongBall(
     SpriteSheet(
         "Sprites/Ball.png",
         np.array([16, 16]),
-        1,
-        color_key=BLACK
+        1
     )
 )
 
-# Groups
-g_entities = pg.sprite.Group(
-    player1,
-    player2,
-    ball
-)
+p1.ball = ball
+p2.ball = ball
 
 g_paddles = pg.sprite.Group(
-    player1,
-    player2
+    p1, p2
 )
 
-ball.bounce_group = g_paddles
-ball.sheet.add_animation("shimmer", range(4))
+ball.g_bounce = g_paddles.copy()
+ball.sheet.add_animation("shimmer", list(range(4)))
 ball.sheet.set_animation("shimmer", 250)
-player1.ball = ball
-player2.ball = ball
-player2.sheet.frame_index = 1
 
-# Score:
-game_controller = GameController()
+g_entities = pg.sprite.Group(
+    p1, ball, p2
+)
 
+gc = GameController()
+
+#Score
 def score_counter():
-    score_text = f"{game_controller.get_score(0)}   {game_controller.get_score(1)}"
+    score_text = f"{gc.get_score(0)}   {gc.get_score(1)}"
     score = font.render(score_text, True, WHITE)
     score_rect = score.get_rect()
     score_rect.center = CENTER
 
     return score, score_rect
 
+
 #! Game loop
 running = True
 while running:
-    # Quit game
     for event in pg.event.get():
-        if event.type == pg.QUIT: 
+        if event.type == pg.QUIT:
             running = False
-    
+
+
+    # Update game state
     g_entities.update()
 
-    # Drawing
-    screen.fill((58, 58, 58))
-    screen.blit(bg, (0,0))
-    pg.draw.aaline(screen, WHITE, (CENTER[0], 0), (CENTER[0], HEIGHT))
+
+    # Draw
+    screen.fill(GREY * 18)
+    screen.blit(bg, (0, 0))
+
+    pg.draw.line(screen, WHITE, (CENTER[0], 0), (CENTER[0], H))
+    pg.draw.line(screen, (0, 255, 0), (0,0), (0, H))
+    pg.draw.line(screen, (255, 0, 0), (W-1,0), (W-1, H))
+    pg.draw.line(screen, WHITE, (0,0), (W, 0))
+    pg.draw.line(screen, WHITE, (0,H-1), (W, H-1))
     screen.blit(*score_counter())
 
-    
     g_entities.draw(screen)
 
 
     pg.display.flip()
-    game_controller.tick(144, 10)
+    gc.tick(144, 10)
 
 
 pg.quit()
-
-#~ todo Exact calculations for bots
-#todo 5x50 sprite for paddles
-#~ todo Clock to GameController
