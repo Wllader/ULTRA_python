@@ -50,7 +50,7 @@ class PongEntity(pg.sprite.Sprite, ABC):
         if self.sheet is None:
             self._image.fill(self.color)
         else:
-            self._image.blit(self.sheet.frame, (0, 0))
+            self._image = self.sheet.frame #new
         return self._image
 
     def update(self):
@@ -173,7 +173,7 @@ class PongBall(PongEntity):
         if self.sheet is None:
             pg.draw.ellipse(self._image, self.color, self._image.get_rect())
         else:
-            self._image.blit(self.sheet.frame, (0, 0))
+            self._image = self.sheet.frame #new
         return self._image
 
 

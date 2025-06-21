@@ -2,7 +2,7 @@ import pygame as pg, numpy as np
 from abc import ABC
 from enum import Enum, auto
 from game_controller import GameController
-from sprite_sheet import SpriteSheet
+from spritesheet_sr_fc import SpriteSheet
 
 class MovingDirection(Enum):
     Horizontal = auto()

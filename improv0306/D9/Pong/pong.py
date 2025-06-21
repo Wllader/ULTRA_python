@@ -1,7 +1,7 @@
 import pygame as pg, numpy as np
 from pong_entities import PongPlayer, PongBot, PongBall, PongBotAdvanced
 from game_controller import GameController
-from sprite_sheet import SpriteSheet
+from spritesheet_sr_fc import SpriteSheet
 
 # Initialize
 pg.init()
@@ -40,8 +40,7 @@ p1 = PongBotAdvanced(
     SpriteSheet(
         "Sprites/Paddle.png",
         np.array([5, 50]),
-        2,
-        color_key=BLACK
+        2
     )
 )
 
@@ -55,8 +54,7 @@ p2 = PongBotAdvanced(
         "Sprites/Paddle.png",
         np.array([5, 50]),
         2,
-        1,
-        BLACK
+        1
     )
 )
 
@@ -69,8 +67,7 @@ ball = PongBall(
     SpriteSheet(
         "Sprites/Ball.png",
         np.array([16, 16]),
-        1,
-        color_key=BLACK
+        1
     )
 )
 

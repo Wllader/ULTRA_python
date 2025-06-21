@@ -1,14 +1,13 @@
 import pygame as pg, numpy as np
 
 class SpriteSheet:
-    def __init__(self, path:str, size:np.ndarray, scale:float = 1., default_frame:int = 0, color_key:np.ndarray = None):
+    def __init__(self, path:str, size:np.ndarray, scale:float = 1., default_frame:np.ndarray = np.zeros(2, dtype=int)):
         self.sheet = pg.image.load(path).convert_alpha()
         self.size = size
         self.scale = scale
         self.default_frame = default_frame
-        self.color_key = color_key
 
-        self.animations:dict[str, list[pg.Surface]] = dict()
+        self.animations:dict[str|int, list[np.ndarray]] = dict()
         self.animation_state = None
         self.current_animation_lenght = 1
 
@@ -18,30 +17,28 @@ class SpriteSheet:
         self.current_frame_time = 0
 
 
-    def get_image(self, frame:int = None, color_key:np.ndarray=None):
+    def get_image(self, frame:np.ndarray = None):
         if frame is None: frame = self.default_frame
-        if color_key is None: color_key = self.color_key
 
-        image = pg.Surface(self.size).convert_alpha()
-        image.blit(self.sheet, (0, 0), (frame * self.size[0], 0, *self.size))
+        image = pg.Surface(self.size, pg.SRCALPHA) #new
+        image.blit(self.sheet, (0, 0), (*frame*self.size, *self.size))
 
         if self.scale != 1:
             image = pg.transform.scale_by(image, self.scale)
 
-        if color_key is not None:
-            image.set_colorkey(color_key)
-
         return image
     
-    def add_animation(self, name:str, frames:list[int], color_key=None):
-        self.animations[name] = [ self.get_image(f, color_key) for f in frames ]
+    def add_animation(self, name:str, frames:list[np.ndarray]):
+        self.animations[name] = frames
 
-    def set_animation(self, name:str, frame_time:int = None):
-        if not frame_time: frame_time = self.frame_time
-        else: self.frame_time = frame_time
+    def set_animation(self, name:str, frame_time_ms:int = None):
+        if name not in self.animations or name == self.animation_state: return
+        if not frame_time_ms: frame_time_ms = self.frame_time
+        else: self.frame_time = frame_time_ms
 
         self.animation_state = name
         self.current_animation_lenght = len(self.animations[name])
+        self.frame_index = 0 #new
 
     @property
     def frame(self):
@@ -49,13 +46,10 @@ class SpriteSheet:
             return self.get_image(self.default_frame)
         
         self.current_frame_time += self.clock.tick()
-        # while self.current_frame_time >= self.frame_time:
-        #     self.current_frame_time -= self.frame_time
-        #     self.frame_index = (self.frame_index + 1) % self.current_animation_lenght
-
         if self.current_frame_time >= self.frame_time:
             index_difference = self.current_frame_time // self.frame_time
             self.current_frame_time %= self.frame_time
             self.frame_index = (self.frame_index + index_difference) % self.current_animation_lenght
 
-        return self.animations[self.animation_state][self.frame_index]
+        frame_indicies = self.animations[self.animation_state][self.frame_index]
+        return self.get_image(frame_indicies)
