@@ -21,7 +21,8 @@ class CalculatorWidget(tk.Frame):
         # Display entry
         self.display = tk.Entry(self, font=("Consolas", 20), borderwidth=2,
                                 relief="groove", justify="right")
-        self.display.grid(row=0, column=0, columnspan=4, sticky="nsew", padx=10, pady=10, ipady=10)
+        self.display.grid(row=0, column=0, columnspan=4, sticky="nsew",
+                           padx=10, pady=10, ipady=10)
 
         # Buttons
         buttons = [
