@@ -39,7 +39,7 @@ class ExampleApp(tk.Tk):
 
     def on_click(self):
         name = self.entry.get()
-        gender = self.pets.get()
+        pets = self.pets.get()
         subscribed = self.subscribe_var.get()
         country = self.country_var.get()
 
@@ -47,7 +47,7 @@ class ExampleApp(tk.Tk):
             messagebox.showwarning("Input needed", "Please enter your name.")
             return
 
-        info = f"Name: {name}\nPets: {gender}\nSubscribed: {subscribed}\nCountry: {country}"
+        info = f"Name: {name}\nPets: {pets}\nSubscribed: {subscribed}\nCountry: {country}"
         messagebox.showinfo("Submission Info", info)
 
 if __name__ == "__main__":
