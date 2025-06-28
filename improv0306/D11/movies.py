@@ -82,9 +82,29 @@ with sqlite3.connect("files/movies.db") as conn:
     cursor.execute("DROP TABLE IF EXISTS t_Director")
 
     # Create directors table:
-    ...
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS t_Director (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vch_FirstName TEXT NOT NULL,
+            vch_LastName TEXT NOT NULL,
+            d_Birth DATE NOT NULL 
+        )
+    """)
 
     # Create Movies table:
-    ...
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS t_Movie (
+            Id INTEGER PRIMARY KEY AUTOINCREMENT,
+            vch_Title TEXT NOT NULL,
+            d_Premiere DATE,
+            fk_DirectorId INTEGER NOT NULL,
+                   
+            FOREIGN KEY (fk_DirectorId) REFERENCES t_Director(Id)
+        )
+    """)
+
+
+    cursor.executemany("INSERT INTO t_Director (vch_FirstName, vch_LastName, d_Birth) VALUES (?, ?, ?)", directors)
+    cursor.executemany("INSERT INTO t_Movie (vch_Title, d_Premiere, fk_DirectorId) VALUES (?, ?, ?)", movies)
 
 
