@@ -29,6 +29,6 @@ class InputFrame(ctk.CTkFrame):
 
 if __name__ == "__main__":
     app = ctk.CTk()
-    InputFrame(app).pack()
+    InputFrame(app, lambda: print("Fetching...")).pack()
 
     app.mainloop()
