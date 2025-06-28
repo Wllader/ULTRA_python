@@ -79,7 +79,7 @@ class PlotFrame(ctk.CTkFrame):
 
 if __name__ == "__main__":
     app = ctk.CTk()
-    pf = PlotFrame(app)
+    pf = PlotFrame(app, "ethereum")
     pf.pack()
 
     app.mainloop()
