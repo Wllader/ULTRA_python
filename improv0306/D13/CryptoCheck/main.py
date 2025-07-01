@@ -22,9 +22,10 @@ class CryptoCheck(ctk.CTk):
     def add_tab(self):
         name = self.main_frame.symbol
         if name == "": return
+        name = name.lower()
 
         tab = self.tab_view.add(name)
-        pf = PlotFrame(tab, name.lower())
+        pf = PlotFrame(tab, name)
         pf.update_slider(self.main_frame.days)
         pf.days_slider.set(self.main_frame.days)
         pf.update_plot(name)

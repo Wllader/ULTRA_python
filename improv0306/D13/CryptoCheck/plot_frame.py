@@ -25,7 +25,6 @@ class PlotFrame(ctk.CTkFrame):
 
         ctk.CTkButton(self, text="Refresh", command=lambda: self.update_plot(self.symbol)).pack()
 
-
         plt.style.use('https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle')
 
     @property
@@ -44,7 +43,7 @@ class PlotFrame(ctk.CTkFrame):
             "days" : self.days
         }
 
-        f = CryptoFetcher(url)
+        f = CryptoFetcher(url, "cache.db")
         return f.get(symbol, params)
 
     def update_plot(self, symbol:str):
