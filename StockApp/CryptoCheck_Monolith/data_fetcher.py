@@ -15,7 +15,7 @@ class Fetcher(ABC):
 
         self.expiration = expiration_s
         self.cache_db = cache_db
-        self.endpoint = api_endpoint
+        self.endpoint = api_endpoint # Template strings coming in Python 3.14
         logging.basicConfig(level=log_level)
 
     @abstractmethod
