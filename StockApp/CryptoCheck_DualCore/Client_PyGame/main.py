@@ -17,7 +17,7 @@ WHITE = GREY * 255
 BLACK = np.zeros(3)
 
 
-plot = Plot(screen, np.array((0, 110)), np.array((W, H-110)))
+plot = Plot(screen, np.array((0, 60)), np.array((W, H-60)))
 def plot_(tick, days, gran):
     days = int(days)
     gran = int(gran)
@@ -41,11 +41,9 @@ def plot_(tick, days, gran):
 
     
 
-
-
-e_tick = Entry(screen, np.array((10, 10)), np.array((150, 40)), default_text="random")
-e_days = Entry(screen, np.array((170, 10)), np.array((70, 40)), default_text="5")
-e_gran = Entry(screen, np.array((250, 10)), np.array((100, 40)), default_text="50")
+e_tick = Entry(screen, np.array((10, 10)), np.array((150, 40)), default_text="random", tooltip_text="Coin tick")
+e_days = Entry(screen, np.array((170, 10)), np.array((70, 40)), default_text="5", tooltip_text="#Days")
+e_gran = Entry(screen, np.array((250, 10)), np.array((100, 40)), default_text="50", tooltip_text="Granularity")
 
 entries = pg.sprite.Group(
     e_tick,
@@ -56,7 +54,7 @@ entries = pg.sprite.Group(
 
 widgets = pg.sprite.Group(
     entries,
-    Button(screen, np.array((10, 60)), np.array((150, 40)), "Click me!", command=lambda: plot_(e_tick.text, e_days.text, e_gran.text)),
+    Button(screen, np.array((360, 10)), np.array((150, 40)), "Click me!", command=lambda: plot_(e_tick.text, e_days.text, e_gran.text)),
     plot
 )
 

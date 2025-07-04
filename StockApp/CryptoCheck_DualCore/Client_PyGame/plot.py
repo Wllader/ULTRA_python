@@ -71,6 +71,7 @@ class Particle(Widget):
 class Plot(Widget):
     def __init__(self, screen, pos, size):
         super().__init__(screen, pos, size)
+        self._image = pg.Surface(size, pg.SRCALPHA)
 
         self.set_data(np.random.rand(50) * 250)
 
@@ -96,16 +97,17 @@ class Plot(Widget):
         I = np.arange(len(self.particles)) / (len(self.particles)-1) * (len(temp_data) - 1)
         I = I.round().astype(int)
 
+        random_colors = np.random.randint(0, 256, (2, 3))
         for i in range(len(self.particles)):
             particles:list[Particle] = list(self.particles)
             x, _ = particles[i]._center_pos
             t = temp_data[I[i]]
             particles[i].change_position((x, (1-t) * self.size[1]))
-            particles[i].change_color((1-t)*BLUE + t*RED)
+            particles[i].change_color((1-t)*random_colors[0] + t*random_colors[1])
 
     @property
     def image(self):
-        self._image.fill(BLACK)
+        self._image.fill((0, 0, 0, 0))
         self.particles.draw(self._image)
 
         return self._image
