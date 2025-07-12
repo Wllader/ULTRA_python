@@ -26,7 +26,7 @@ class Particle(Widget):
         self.color_tween = Tween.EaseInOutCubic(np.random.randint(500, 1500, 1))
 
     @property
-    def position(self):
+    def position(self): #todo Make this pattern a decorator
         if (self._center_pos != self._new_center_pos).any():
             p, s = self.pos_tween.get_state(self._center_pos, self._new_center_pos)
             if s:

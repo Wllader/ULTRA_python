@@ -129,7 +129,7 @@ class Entry(Widget):
 
         if self.selected:
             self._image.fill(GREY * 60, special_flags=pg.BLEND_RGBA_ADD)
-        elif self.hover():
+        if self.hover():
             self._image.fill(GREY * 200, special_flags=pg.BLEND_RGBA_MULT)
 
         return self._image
