@@ -1,5 +1,5 @@
 from typing import Callable
-from numpy import clip
+from numpy import clip, ndarray, array
 from pygame.time import Clock
 
 
@@ -23,6 +23,16 @@ class Tween:
     def reset(self):
         self.current_time = 0
         self.clk.tick()
+
+    #new
+    def tweenify(self, start:ndarray, stop:ndarray):
+        if (start != stop).any():
+            state, finished = self.get_state(start, stop)
+            if finished:
+                start[:] = stop #new
+                return stop
+            return state
+        return start
 
 
     @staticmethod
@@ -71,3 +81,7 @@ class Tween:
             total_time_ms,
             ease_in_out_bounce
         )
+
+
+if __name__ == "__main__":
+    pass

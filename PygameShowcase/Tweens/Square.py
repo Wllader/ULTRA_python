@@ -42,6 +42,8 @@ class Square(Entity):
     
     @property
     def color(self):
+        return self.tween.tweenify(self._color, self._new_color)
+
         if (self._color != self._new_color).any():
             c, finished = self.tween.get_state(self._color, self._new_color)
             if finished:
@@ -62,6 +64,8 @@ class Square(Entity):
 
     @property
     def position(self):
+        return self.tween.tweenify(self._center_pos, self._new_center_pos)
+
         if (self._center_pos != self._new_center_pos).any():
             p, finished = self.tween.get_state(self._center_pos, self._new_center_pos)
             if finished:
