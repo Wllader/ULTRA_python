@@ -36,6 +36,8 @@ players = pg.sprite.Group(
     player, p2
 )
 
+#~ p = pg.Rect(50, 50, 50, 50)
+
 
 #! Game loop
 running = True
@@ -53,6 +55,8 @@ while running:
     # Vykreslování (Draw)
     screen.fill(GREY * 28)
 
+    #~ pg.draw.rect(screen, BLACK, p)
+    #~ screen.blit(player.image, player.rect)
     players.draw(screen)
 
     pg.display.flip()
