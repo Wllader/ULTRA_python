@@ -1,7 +1,7 @@
 import pygame as pg, numpy as np
 from pong_entities import PongPlayer, PongBot, PongBall
 from game_controller import GameController
-from sprite_sheet import SpriteSheet
+from sprite_sheet_sr_fc import SpriteSheet
 
 pg.init()
 
@@ -17,7 +17,7 @@ PADDLE_DIMS = PW, PH = np.array([10, 100])
 PADDLE_SPEED = np.array([0, 5])
 
 BALL_SIZE = np.array([16, 16])
-BALL_SPEED = np.array([5, 7])
+BALL_SPEED = np.array([0, 0])
 
 #Objects
 screen = pg.display.set_mode(SIZE)
@@ -62,9 +62,13 @@ ball = PongBall(
     color=WHITE,
     sprite_sheet=SpriteSheet(
         "Sprites/Ball.png",
-        (16, 16)
+        (16, 16),
+        20
     )
 )
+
+ball.sheet.add_animation("Shimmer", list(range(4)))
+ball.sheet.set_animation("Shimmer", 1000)
 
 bot.target = ball
 

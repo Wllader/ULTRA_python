@@ -1,7 +1,7 @@
 import pygame as pg, numpy as np
 from enum import Enum, auto
 from game_controller import GameController
-from sprite_sheet import SpriteSheet
+from sprite_sheet_sr_fc import SpriteSheet
 
 class MovingDirection(Enum):
     Horizontal = auto()
@@ -28,7 +28,7 @@ class PongEntity(pg.sprite.Sprite):
         self.screen = screen
         self._image = pg.Surface(size, pg.SRCALPHA)
         if self.sheet:
-            self._image = self.sheet.get_image()
+            self._image = self.sheet.frame
         else:
             self._image.fill(self.color)
 
@@ -51,6 +51,8 @@ class PongEntity(pg.sprite.Sprite):
 
     @property
     def image(self):
+        if self.sheet:
+            self._image = self.sheet.frame
         return self._image
     
     @property

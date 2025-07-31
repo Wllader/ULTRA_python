@@ -30,11 +30,28 @@ class SpriteSheet:
         return image
     
     def add_animation(self, name:str, frames:list[int]):
-        pass
+        self.animations[name.lower()] = [ self.get_image(fi) for fi in frames ]
 
     def set_animation(self, name:str, frame_time:int = None):
-        pass
+        if frame_time is not None: self.frame_time = frame_time
+        name = name.lower()
+
+        self.animation_state = name
+        self.current_anim_len = len(self.animations[name])
 
     @property
     def frame(self):
-        pass
+        if not self.animation_state:
+            return self.get_image()
+        
+        self.current_frame_time += self.clock.tick()
+        # while self.current_frame_time >= self.frame_time:
+        #     self.current_frame_time -= self.frame_time
+        #     self.frame_index = (self.frame_index + 1) % self.current_anim_len
+
+        if self.current_frame_time >= self.frame_time:
+            index_diff = self.current_frame_time // self.frame_time
+            self.current_frame_time %= self.frame_time
+            self.frame_index = (self.frame_index + index_diff) % self.current_anim_len
+
+        return self.animations[self.animation_state][self.frame_index]
