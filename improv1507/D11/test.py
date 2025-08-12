@@ -1,6 +1,7 @@
 import requests, json
 import pandas as pd
 import matplotlib.pyplot as plt
+import sqlite3
 
 id = "bitcoin"
 
@@ -34,7 +35,7 @@ df["DateTime"] = pd.to_datetime(df["Timestamp"], unit="ms")
 
 df.insert(len(df.columns) - 1, "Timestamp", df.pop("Timestamp"))
 
-df.to_json(f"files/{id}_dfCache.json", index=False)
+# df.to_json(f"files/{id}_dfCache.json", index=False)
 
 
 plt.plot(df["DateTime"], df["Price"])
@@ -43,6 +44,10 @@ plt.xlabel("Date")
 plt.ylabel(f"Price ({params["vs_currency"].upper()})")
 plt.grid(True)
 plt.tight_layout()
-plt.show()
+# plt.show()
 
 # print(df.head())
+
+
+with sqlite3.connect("files/crypto_cacheDf.db") as conn:
+    df.to_sql(f"{id.capitalize()}", conn, index=False)

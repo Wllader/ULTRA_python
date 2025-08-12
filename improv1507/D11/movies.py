@@ -74,6 +74,9 @@ with sqlite3.connect("files/movies.db") as conn:
 
     cursor.execute("PRAGMA foreign_keys = ON")
 
+    cursor.execute("DROP TABLE IF EXISTS t_Movie")
+    cursor.execute("DROP TABLE IF EXISTS t_Director")
+
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS t_Director (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
