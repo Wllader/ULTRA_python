@@ -50,7 +50,7 @@ class PlotFrame(ctk.CTkFrame):
                     "days" : self.days
                 }
 
-                f = CryptoFetcher(url)
+                f = CryptoFetcher(url, "cache.db")
 
             case TickerType.SHARE:
                 print("Not implemented")

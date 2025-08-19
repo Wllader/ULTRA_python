@@ -2,6 +2,8 @@ import customtkinter as ctk
 from input_frame import InputFrame
 from plot_frame import PlotFrame
 
+import logging
+
 
 class CryptoCheck(ctk.CTk):
     def __init__(self):
@@ -45,5 +47,7 @@ class CryptoCheck(ctk.CTk):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO) #! Logger level
+
     app = CryptoCheck()
     app.mainloop()
