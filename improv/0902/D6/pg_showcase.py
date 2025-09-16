@@ -1,5 +1,5 @@
 import pygame as pg, numpy as np
-from square import PlayerSquare, Square
+from square import PlayerSquare, MovingSquare, Square
 
 # Inicializace
 pg.init()
@@ -33,12 +33,16 @@ s1 = Square(
     GREY * 112
 )
 
-s2 = Square(
+s2 = MovingSquare(
     screen,
     np.array([80, 200]),
     np.array([35, 35]),
-    GREY * 112
+    np.array([0, 255, 255]),
+    np.array([5, 0])
 )
+
+s2.collision_group.add(p, s1)
+
 
 
 g_entities = pg.sprite.Group(
