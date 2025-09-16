@@ -1,4 +1,5 @@
 import pygame as pg, numpy as np
+from square import PlayerSquare, Square
 
 # Inicializace
 pg.init()
@@ -19,10 +20,30 @@ pg.display.set_caption("My first game")
 clock = pg.time.Clock()
 
 
-p = pg.Rect(
-    50, 100, 35, 35
+p = PlayerSquare(
+    screen,
+    np.array([50, 100]),
+    np.array([35, 35])
 )
 
+s1 = Square(
+    screen,
+    np.array([100, 100]),
+    np.array([35, 35]),
+    GREY * 112
+)
+
+s2 = Square(
+    screen,
+    np.array([80, 200]),
+    np.array([35, 35]),
+    GREY * 112
+)
+
+
+g_entities = pg.sprite.Group(
+    p, s1, s2
+)
 
 
 #! Game loop
@@ -35,21 +56,13 @@ while running:
             running = False
 
     # Update
-    keys = pg.key.get_pressed()
-    if keys[pg.K_w]:
-        p.top -= player_speed * dt
-    if keys[pg.K_s]:
-        p.top += player_speed * dt
-
-    if keys[pg.K_a]:
-        p.left -= player_speed * dt
-    if keys[pg.K_d]:
-        p.left += player_speed * dt
+    g_entities.update(dt=dt)
 
 
     # Draw
     screen.fill(GREY * 56)
-    pg.draw.rect(screen, (255, 0, 0), p)
+    g_entities.draw(screen)
+
 
 
     pg.display.flip()
