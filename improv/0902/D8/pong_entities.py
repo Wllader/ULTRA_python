@@ -56,7 +56,7 @@ class PongEntity(pg.sprite.Sprite):
     @property
     def image(self):
         if self.sheet:
-            self._image = self.sheet.get_image()
+            self._image = self.sheet.frame
         return self._image
 
     @property
@@ -128,6 +128,9 @@ class PongBot(PongEntity):
 
         return dist_next < dist_now
 
+
+class PongBotAdvanced(PongBot):
+    ...
 
 
 class PongBall(PongEntity):

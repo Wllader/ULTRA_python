@@ -17,7 +17,7 @@ PADDLE_DIMS = PW, PH = np.array([10, 100])
 PADDLE_SPEED = np.array([0, 5])
 
 BALL_SIZE = np.array([16, 16])
-BALL_SPEED = np.array([5, 7])
+BALL_SPEED = np.array([5, 7]) * 0
 
 
 #Objects
@@ -66,10 +66,13 @@ ball = PongBall(
         SpriteSheet(
         "Sprites/Ball.png",
         (16, 16),
-        1,
+        10,
         0
     )
 )
+
+ball.sheet.add_animation("shimmer", list(range(4)))
+ball.sheet.set_animation("shimmer")
 
 g_paddles = pg.sprite.Group(
     player, bot
