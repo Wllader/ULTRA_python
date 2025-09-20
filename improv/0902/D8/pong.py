@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from pong_entities import PongPlayer, PongBall, PongBot
 from game_controller import GameController
+from spritesheet_sr_fc import SpriteSheet
 
 pg.init()
 
@@ -23,13 +24,23 @@ BALL_SPEED = np.array([5, 7])
 screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("Pong!")
 gc = GameController()
+bg = pg.image.load("Sprites/Bg.png")
+bg = pg.transform.scale_by(bg, W / bg.get_width())
+font = pg.font.Font("freesansbold.ttf", 32)
+
 
 player = PongPlayer(
     screen,
     PADDLE_DIMS,
     (55, CENTER[1]),
     PADDLE_SPEED,
-    (0, 255, 0)
+    (0, 255, 0),
+    SpriteSheet(
+        "Sprites/Paddle.png",
+        (5, 50),
+        2,
+        0
+    )
 )
 
 bot = PongBot(
@@ -37,7 +48,13 @@ bot = PongBot(
     PADDLE_DIMS,
     (W-55, CENTER[1]),
     PADDLE_SPEED,
-    (255, 0, 0)
+    (255, 0, 0),
+        SpriteSheet(
+        "Sprites/Paddle.png",
+        (5, 50),
+        2,
+        1
+    )
 )
 
 ball = PongBall(
@@ -45,7 +62,13 @@ ball = PongBall(
     BALL_SIZE,
     CENTER,
     BALL_SPEED,
-    WHITE
+    WHITE,
+        SpriteSheet(
+        "Sprites/Ball.png",
+        (16, 16),
+        1,
+        0
+    )
 )
 
 g_paddles = pg.sprite.Group(
@@ -61,6 +84,14 @@ g_entities = pg.sprite.Group(
 bot.ball = ball
 
 
+def score_counter():
+    score_text = f"{gc.get_score(0)}   {gc.get_score(1)}"
+    score = font.render(score_text, True, WHITE)
+    score_rect = score.get_rect()
+    score_rect.center = CENTER
+
+    return score, score_rect
+
 #! Game Loop
 running = True
 while running:
@@ -73,6 +104,10 @@ while running:
 
     #Draw
     screen.fill(GREY * 28)
+    screen.blit(bg, (0, 0))
+    pg.draw.line(screen, WHITE, (CENTER[0], 0), (CENTER[0], H))
+    screen.blit(*score_counter())
+
     g_entities.draw(screen)
 
 

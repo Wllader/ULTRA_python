@@ -98,8 +98,8 @@ class PongPlayer(PongEntity):
 
 
 class PongBot(PongEntity):
-    def __init__(self, screen, size, init_center_pos, speed, color):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color, spritesheet):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self.ball:PongEntity = None
 
@@ -131,8 +131,8 @@ class PongBot(PongEntity):
 
 
 class PongBall(PongEntity):
-    def __init__(self, screen, size, init_center_pos, speed, color):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color, spritesheet):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self._image.fill((0, 0, 0, 0))
         pg.draw.ellipse(self._image, self.color, self._image.get_rect())
@@ -192,11 +192,12 @@ class PongBall(PongEntity):
         if self.rect.top <= 0 or self.rect.bottom >= self.screen.get_height():
             self.speed[1] *= -1
 
-        if self.rect.left <= 0 or self.rect.right >= self.screen.get_width():
+        if (l := self.rect.left <= 0) or self.rect.right >= self.screen.get_width():
             self.speed[0] *= -1
             self.rect.center = (
                 self.screen_center[0],
                 np.random.randint(self.rect.height + 5, self.screen.get_height() - (self.rect.height + 5))
             )
             self.color = WHITE
-            # todo Score
+            
+            self.gc.score(1) if l else self.gc.score(0)
