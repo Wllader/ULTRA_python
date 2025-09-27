@@ -130,17 +130,28 @@ class PongBot(PongEntity):
 
 
 class PongBotAdvanced(PongBot):
+    def __init__(self, screen, size, init_center_pos, speed, color, spritesheet):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
+
+        self.cached_position = None
+
     def update(self):
         if self.ball_moving_towards_me():
             ball_half_width = self.ball.rect.width / 2
             paddle_axis = self.rect.right + ball_half_width if self.ball.speed[0] < 0 else self.rect.left - ball_half_width
             y = self.intersect(self.ball.speed, self.ball.rect.center, paddle_axis)
             y = self.bound(y, 0, self.screen.get_height())
-            self.drift_towards(np.array((paddle_axis, y), dtype=int))
+            # self.drift_towards(np.array((paddle_axis, y), dtype=int))
+
+            target = np.array((paddle_axis, y), dtype=int)
 
         else:
-            self.drift_towards(self.screen_center)
+            target = self.screen_center
 
+        if self.cached_position is None or np.abs(target[1] - self.cached_position[1]) >= self.rect.height / 2:
+            self.cached_position = target
+
+        self.drift_towards(self.cached_position)
         self.window_correction()
         self.old_rect = self.rect.copy()
 

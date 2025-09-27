@@ -29,7 +29,7 @@ bg = pg.transform.scale_by(bg, W / bg.get_width())
 font = pg.font.Font("freesansbold.ttf", 32)
 
 
-player = PongPlayer(
+player = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (55, CENTER[1]),
@@ -85,6 +85,7 @@ g_entities = pg.sprite.Group(
 )
 
 bot.ball = ball
+player.ball = ball
 
 
 def score_counter():
