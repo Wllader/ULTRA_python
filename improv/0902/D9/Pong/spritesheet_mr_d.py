@@ -35,6 +35,7 @@ class SpriteSheet:
     def set_animation(self, name:str, frame_time:int = None):
         if frame_time is not None: self.frame_time = frame_time
         name = name.lower()
+        if name == self.animation_state: return
 
         self.animation_state = name
         self.current_anim_len = len(self.animations[name])
