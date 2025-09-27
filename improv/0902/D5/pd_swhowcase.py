@@ -100,5 +100,3 @@ df = df[df.BMI > 0]
 # print(
 #     df.groupby(["Age_Category", "Outcome"], observed=False)["Glucose"].mean()
 # )
-
-from statistics import linear_regression
