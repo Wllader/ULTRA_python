@@ -136,10 +136,10 @@ class PongBotAdvanced(PongBot):
             paddle_axis = self.rect.right + ball_half_width if self.ball.speed[0] < 0 else self.rect.left - ball_half_width
             y = self.intersect(self.ball.speed, self.ball.rect.center, paddle_axis)
             y = self.bound(y, 0, self.screen.get_height())
-            self.drift_towards(np.array(paddle_axis, y, dtype=int))
+            self.drift_towards(np.array((paddle_axis, y), dtype=int))
 
         else:
-            self.drift_towards(self.ball)
+            self.drift_towards(self.screen_center)
 
         self.window_correction()
         self.old_rect = self.rect.copy()
@@ -147,16 +147,31 @@ class PongBotAdvanced(PongBot):
 
     @staticmethod
     def intersect(vector:np.ndarray, location:np.ndarray, axis_x) -> float:
-        # ax + by + c = 0 #todo 
+        # ax + by + c = 0
         # c = -(ax + by): (-b, a)=target_speed, (x, y)=target_center
         # y = (ax + c)/(-b): (-b, a)=target_speed, x=axis_x
+        normal = vector.copy()[::-1]
+        normal[0] *= -1
 
-        pass
+        c = -np.dot(normal, location)
+        y:float = (normal[0] * axis_x + c)/(-normal[1])
+
+        return y
+        
 
 
     @staticmethod
     def bound(y:float, lower_bound:int, upper_bound:int) -> float:
-        pass #todo
+        if y >= lower_bound and y <= upper_bound:
+            return y
+        
+        if y < lower_bound:
+            y0 = np.abs(lower_bound - y)
+            return PongBotAdvanced.bound(y + 2*y0, lower_bound, upper_bound)
+        
+        if y > upper_bound:
+            y0 = np.abs(upper_bound - y)
+            return PongBotAdvanced.bound(y - 2*y0, lower_bound, upper_bound)
 
 
 class PongBall(PongEntity):
