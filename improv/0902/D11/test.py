@@ -1,6 +1,7 @@
 import requests, json
 import pandas as pd
 import sqlite3
+import matplotlib.pyplot as plt
 
 id = "bitcoin"
 url = f"https://api.coingecko.com/api/v3/coins/{id}/market_chart"
@@ -25,10 +26,20 @@ df = pd.DataFrame()
 df["Timestamp"], df["Price"] = zip(*data["prices"])
 df["MarketCap"] = list(zip(*data["market_caps"]))[1]
 df["TotalVolume"] = list(zip(*data["total_volumes"]))[1]
+df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms")
 
 
 # df.to_json(f"files/{id}_cache_v2.json", indent=4, index=False)
 
 
+plt.plot(df["Timestamp"], df["Price"])
+plt.title(f"{id.capitalize()} price Trend")
+plt.xlabel("Date")
+plt.ylabel(f"Price ({params["vs_currency"].upper()})")
+plt.grid(True)
+plt.tight_layout()
+# plt.show()
+
+
 with sqlite3.connect("files/crypto_cache.db") as conn:
-    df.to_sql(f"{id.capitalize()}", conn, index=False)
+    df.to_sql(f"{id.capitalize()}", conn, index=False, if_exists="replace")
