@@ -50,9 +50,8 @@ class PlotFrame(ctk.CTkFrame):
         response = requests.get(url, params)
         return response.json()
     
-    def update_plot(self, symbol:str, days:int):
-        data = self.fetch_crypto_data(symbol, days) #todo Use pd.DataFrame instead of Dict
-
+    def fetch_crypto_data_v2(self, symbol, days) -> pd.DataFrame|None:
+        data = self.fetch_crypto_data(symbol, days)
         if "status" in data:
             print(data["status"])
             return
@@ -61,14 +60,23 @@ class PlotFrame(ctk.CTkFrame):
             print(data["error"])
             return
         
+        df = pd.DataFrame()
+        df["Timestamp"], df["Price"] = zip(*data["prices"])
+        df["Timestamp"] = to_datetime(df["Timestamp"], unit="ms")
+        
+        return df
+    
+    def update_plot(self, symbol:str, days:int):
+        df = self.fetch_crypto_data_v2(symbol, days)
+
+        if df is None:
+            return
+        
         for w in self.canvas_frame.winfo_children():
             w.destroy()
 
-        timestamps, prices = zip(*data["prices"])
-        timestamps = to_datetime(timestamps, unit="ms")
-
         fig, ax = plt.subplots()
-        ax.plot(timestamps, prices)
+        ax.plot(df["Timestamp"], df["Price"])
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
         ax.set_title(f"{symbol.capitalize()} price History of last {days} days")
