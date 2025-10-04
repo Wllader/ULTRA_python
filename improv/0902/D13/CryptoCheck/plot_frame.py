@@ -45,7 +45,7 @@ class PlotFrame(ctk.CTkFrame):
         self.slider_label.configure(text=f"Adjust Number of days: {int(value)}")
 
 
-    def fetch_data(self, symbol) -> pd.DataFrame|None:
+    def fetch_data(self, symbol, days) -> pd.DataFrame|None:
         f: Fetcher
 
         match self.type:
@@ -53,10 +53,10 @@ class PlotFrame(ctk.CTkFrame):
                 url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
                 params = {
                     "vs_currency" : "usd",
-                    "days" : self.days
+                    "days" : days
                 }
 
-                f = CryptoFetcher(url)
+                f = CryptoFetcher(url, "cache.db")
 
             case TickerType.SHARE:
                 self.logger.warning("Not implemented")
@@ -65,9 +65,9 @@ class PlotFrame(ctk.CTkFrame):
 
         return f.get(symbol, params)
     
-    
+
     def update_plot(self, symbol:str, days:int):
-        df = self.fetch_data(symbol)
+        df = self.fetch_data(symbol, days)
 
         if df is None:
             return
