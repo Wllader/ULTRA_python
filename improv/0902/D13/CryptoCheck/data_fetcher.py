@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, override
 import pandas as pd, requests, logging
+import sqlite3
 
 
 class Fetcher(ABC):
-    def __init__(self, api_endpoint:str):
+    def __init__(self, api_endpoint:str, cache_db_path:str, expiration_s:int=30):
         super().__init__()
 
         self.endpoint = api_endpoint
@@ -13,6 +14,9 @@ class Fetcher(ABC):
     @abstractmethod
     def get(self, tick, params) -> pd.DataFrame:
         pass
+
+    def init_db(self, conn:sqlite3.Connection):
+        ...
 
 
 class CryptoFetcher(Fetcher):
@@ -42,12 +46,27 @@ class CryptoFetcher(Fetcher):
 
         self.logger.info("Formatted!")
         return df
+    
+    def cache_data(self, conn:sqlite3.Connection, tick:str, params:dict, data:pd.DataFrame|None) -> bool:
+        ...
+
+    def get_cached(self, conn:sqlite3.Connection, tick:str, params:dict):
+        ...
 
     
 
 
     @override
     def get(self, tick, params) -> pd.DataFrame|None:
+        # Check if data with these params ar in db
+        # If yes: Return those (*format)
+        # If not:
+        #   Fetch
+        #   Format
+        #   Save to db
+        #   Return
+
+
         data = self.fetch_data(params)
         data = self.format_data(data)
 
