@@ -45,3 +45,11 @@ class Tween:
             lambda t: 1 - pow(1-t, 5),
             clipped
         )
+    
+    @staticmethod
+    def EaseInOutCubic(total_time_ms:int = 1000, clipped:bool = False) -> "Tween":
+        return Tween(
+            total_time_ms,
+            lambda t: 4*t**3 if t < 0.5 else 1 - (-2*t + 2)**3 / 2,
+            clipped
+        )
