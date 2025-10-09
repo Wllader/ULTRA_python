@@ -23,22 +23,25 @@
 
 
 class Box:
-    def __init__(self, char="#"):
-        self.char = char
+    def __init__(self, char_h="#", char_v=None):
+        self.char_h = char_h
+        self.char_v = char_v if char_v is not None else char_h
 
     def _full_line(self, l):
-        print(l*self.char)
+        print(l*self.char_h)
 
     def _rows(self, l, count):
         for _ in range(count):
-            print(f"{self.char}{(l-2)*" "}{self.char}")
+            print(f"{self.char_v}{(l-2)*" "}{self.char_v}")
 
-    def draw(self, w, h):
+    def draw(self, w, h=None):
+        h_ = h if h is not None else w
+
         self._full_line(w)
-        self._rows(w, h-2)
+        self._rows(w, h_-2)
         self._full_line(w)
         
 
-b = Box(".")
-b.draw(10, 12)
+b = Box("-")
+b.draw(2, 6)
 
