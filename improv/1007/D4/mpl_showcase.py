@@ -26,7 +26,7 @@ import numpy as np
 
 # kategorie = list("ABCD")
 # hodnoty = np.random.randint(10, 50, (4, 4))
-# barvy = ["skyblue", "orange", "green", "red"]
+barvy = ["skyblue", "orange", "green", "red"]
 
 # for i, n in enumerate(hodnoty):
 #     p = axes[i]
@@ -50,11 +50,31 @@ import numpy as np
 
 
 labels = ["Python", "Java", "C++", "Rust"]
-sizes = [45, 20, 5, 30]
+# sizes = [45, 20, 5, 30]
 explode = (0, 0, 0.3, 0)
 
-plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90, explode=explode)
-plt.title("Pie chart of programming language popularity")
+# plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90, explode=explode)
+# plt.title("Pie chart of programming language popularity")
 
+# plt.show()
+
+
+fig, axes = plt.subplots(2, 2)
+axes = np.array(axes).reshape(-1)
+
+x = np.linspace(-np.pi/2, 2*np.pi, 50)
+axes[0].plot(x, np.cos(x))
+
+sizes = np.random.rand(4)
+sizes = sizes/sizes.sum()
+axes[1].bar(labels, sizes, color=barvy)
+
+x = np.random.rand(50)
+y = np.random.rand(len(x))
+axes[2].scatter(x, y, c=np.random.rand(len(x)), s=np.random.rand(len(x))*1000, alpha=.5)
+
+axes[3].pie(sizes, explode=explode, labels=labels, autopct="%1.1f%%", startangle=120, colors=barvy)
+
+
+plt.tight_layout()
 plt.show()
-
