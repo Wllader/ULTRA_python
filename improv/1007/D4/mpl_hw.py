@@ -31,25 +31,43 @@ def draw_integral(x0, x1, steps_f:int=100, steps_i:int=20, f:Callable=lambda x_:
 
 class Integrator:
     def __init__(self, f:Callable):
-        ...
+        self.set_function(f)
 
-    def set_function(self, ...):
-        ...
+    def set_function(self, f:Callable):
+        self.f = f
 
-    def draw(self, ...):
-        ...
+    def draw(self, x0, x1, steps_f:int=100, steps_i:int=20):
+        x_f = np.linspace(x0, x1, steps_f)
+        x_i = np.linspace(x0, x1, steps_i, endpoint=False)
+        y_i = self.f(x_i)
+        dx = abs(x_i[1] - x_i[0])
 
-    def calculate(self, ...):
-        ...
+        plt.plot(x_f, self.f(x_f))
+        plt.fill_between(x_f, self.f(x_f), color="skyblue", alpha=.5)
+        for i in range(len(x_i)):
+            plt.fill_between(
+                [x_i[i], x_i[i] + dx], [y_i[i], y_i[i]], color="red", alpha=.5
+            )
 
-    def draw_calculate(self, ...):
-        ...
+        plt.show()
+
+    def calculate(self, x0, x1, steps:int=100):
+        x = np.linspace(x0, x1, steps, endpoint=False)
+        dx:float = abs(x[1] - x[0])
+        y = self.f(x)
+
+        return (y * dx).sum()
+
+
+    def draw_calculate(self, x0, x1, steps_c=100, steps_d=30):
+        print(self.calculate(x0, x1, steps_c))
+        self.draw(x0, x1, steps_c, steps_d)
 
 
 if __name__ == "__main__":
     I = Integrator(np.sin)
 
-    I.draw_calculate(...)
+    I.draw_calculate(-5, 12, steps_c=500)
 
     I.set_function(lambda x: np.abs(np.cos(x))**2)
-    I.draw_calculate(...)
+    I.draw_calculate(-12, 5, steps_c=500)
