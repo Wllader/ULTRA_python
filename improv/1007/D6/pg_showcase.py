@@ -27,6 +27,8 @@ p2 = Square(screen, (100, 235), (50, 50), color=(255, 0, 0))
 g_squares = pg.sprite.Group(
     p, p2
 )
+p2.collison_group.add(p)
+p.collison_group.add(p2)
 
 #! Game loop
 running = True
