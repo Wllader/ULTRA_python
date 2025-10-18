@@ -19,8 +19,10 @@ class Entity(pg.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=init_pos)
         self.old_rect = self.rect.copy()
 
+        self.collison_group = pg.sprite.Group()
 
-    def update(self):
+
+    def update(self, dt):
         super().update()
 
 
@@ -40,9 +42,8 @@ class Square(Entity):
     def __init__(self, screen, init_pos, size, color = (200, 180, 30), speed:tuple[int]=None):
         super().__init__(screen, init_pos, size, color)
 
-        self.speed = np.array(speed) if speed else np.array((5, 5))
-        self.collison_group = pg.sprite.Group()
-    
+        self.speed = np.array(speed) if speed else np.array((5, 5))                    
+
     def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
         if o := self.rect.collideobjects(list(self.collison_group)):
             o:Entity
@@ -65,30 +66,43 @@ class Square(Entity):
                         return np.array([1, -1])
                     
         return np.array([1, 1])
-                    
 
+
+
+class PlayerSquare(Square):    
     def update(self, dt):
         keys = pg.key.get_pressed()
         if keys[pg.K_d]:
             self.rect.x += self.speed[0] * dt
         if keys[pg.K_a]:
             self.rect.x -= self.speed[0] * dt
-        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+        self.handle_collisions(MovingDirection.Horizontal)
 
         if keys[pg.K_w]:
             self.rect.y -= self.speed[1] * dt
         if keys[pg.K_s]:
             self.rect.y += self.speed[1] * dt
-        self.speed *= self.handle_collisions(MovingDirection.Vertical)
+        self.handle_collisions(MovingDirection.Vertical)
 
         self.window_correction()
         self.old_rect = self.rect.copy()
 
 
-class PlayerSquare(Square):
-    pass
-
-
 
 class MovingSquare(Square):
-    pass
+    def update(self, dt):
+        self.rect.x += self.speed[0] * dt
+        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+
+        self.rect.y += self.speed[1] * dt
+        self.speed *= self.handle_collisions(MovingDirection.Vertical)
+
+        if self.rect.left <= 0 or self.rect.right >= self.screen.get_width():
+            self.speed[0] *= -1
+
+        if self.rect.top <= 0 or self.rect.bottom >= self.screen.get_height():
+            self.speed[1] *= -1
+
+        self.window_correction()
+        self.old_rect = self.rect.copy()
+
