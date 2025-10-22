@@ -1,5 +1,6 @@
 import pygame as pg, numpy as np
 from enum import Enum, auto
+from game_controller import GameController
 
 #Todo Vytvořit základní PongEntity
 #Todo Odvodit od ní PongPlayer, PongBot a PongBall objekty a implementovat jejich základní chování
@@ -15,6 +16,7 @@ class MovingDirection(Enum):
 class PongEntity(pg.sprite.Sprite):
     def __init__(self, screen:pg.Surface, size:tuple[int], init_center_pos:tuple[int], speed:tuple[int], color:tuple[int]):
         super().__init__()
+        self.gc = GameController()
 
         self.speed = np.array(speed)
         self.color = np.array(color, dtype=np.uint8)
@@ -27,6 +29,10 @@ class PongEntity(pg.sprite.Sprite):
         self.old_rect = self.rect.copy()
 
     @property
+    def dt(self):
+        return self.gc.dt
+
+    @property
     def image(self):
         return self._image
     
@@ -37,7 +43,7 @@ class PongEntity(pg.sprite.Sprite):
             self.screen.get_height()
         ]) // 2
     
-    def update(self, dt):
+    def update(self):
         super().update()
 
     def window_correction(self):
@@ -54,16 +60,17 @@ class PongEntity(pg.sprite.Sprite):
 
 
 class PongPlayer(PongEntity):
-    def update(self, dt):
+    def update(self):
         keys = pg.key.get_pressed()
         if keys[pg.K_w] or keys[pg.K_UP]:
-            self.rect.y -= self.speed[1] * dt
+            self.rect.y -= self.speed[1] * self.dt
 
         if keys[pg.K_s] or keys[pg.K_DOWN]:
-            self.rect.y += self.speed[1] * dt
+            self.rect.y += self.speed[1] * self.dt
 
         self.window_correction()
         self.old_rect = self.rect.copy()
+
 
 
 class PongBot(PongEntity):
@@ -72,17 +79,39 @@ class PongBot(PongEntity):
 
         self.ball:PongEntity = None
 
-    def update(self, dt):
-        if self.ball:
-            self.rect.centery = self.ball.rect.centery
+
+    def update(self):
+        if self.ball is None: return
+
+        if self.ball_moving_towards_me():
+            self.drift_towards(self.ball.rect.center)
+        else:
+            self.drift_towards(self.screen_center)
 
         self.window_correction()
 
-    def drift_towards(self, center:tuple[int]): #todo Implement drifting towards given coordinates
-        pass
 
-    def ball_moving_towards_me(self) -> bool: #todo Implement
-        pass
+    def drift_towards(self, center:tuple[int]):
+        if self.rect.centery > center[1]:
+            self.rect.y -= self.speed[1] * self.dt
+        elif self.rect.centery < center[1]:
+            self.rect.y += self.speed[1] * self.dt
+
+
+    def ball_moving_towards_me(self) -> bool:
+        ball_now = self.ball.rect.center
+        ball_next = ball_now + self.ball.speed * self.dt
+
+        dist_now = np.abs(self.rect.centerx - ball_now[0])
+        dist_next = np.abs(self.rect.centerx - ball_next[0])
+
+        return dist_next < dist_now
+
+
+
+class PongBotAdvanced(PongBot): #todo
+    pass
+
 
 
 class PongBall(PongEntity):
@@ -99,11 +128,11 @@ class PongBall(PongEntity):
         pg.draw.ellipse(self._image, self.color, self._image.get_rect())
         return self._image
 
-    def update(self, dt):
-        self.rect.x += self.speed[0] * dt
+    def update(self):
+        self.rect.x += self.speed[0] * self.dt
         self.speed *= self.handle_collisions(MovingDirection.Horizontal)
 
-        self.rect.y += self.speed[1] * dt
+        self.rect.y += self.speed[1] * self.dt
         self.speed *= self.handle_collisions(MovingDirection.Vertical)
 
         self.window_correction()
