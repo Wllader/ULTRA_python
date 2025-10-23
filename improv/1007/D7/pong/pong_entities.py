@@ -110,7 +110,18 @@ class PongBot(PongEntity):
 
 
 class PongBotAdvanced(PongBot): #todo
-    pass
+    def update(self):
+        pass
+
+    def intersect(self, vector:tuple[int], location:tuple[int], axis_x) -> float:
+        # ax + by + c = 0
+        # c = -(ax + by): (-b, a)=target_speed, (x, y)=target_center
+        # y = (ax + c)/(-b): (-b, a)=target_speed, x=axis_x, (x, y)=intersection_coordinates
+        pass
+
+    def bound(self, y:float, lower_bound:int, upper_bound:int) -> float:
+        pass
+        #todo Bound y between lb and ub
 
 
 
