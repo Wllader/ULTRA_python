@@ -110,18 +110,56 @@ class PongBot(PongEntity):
 
 
 class PongBotAdvanced(PongBot): #todo
-    def update(self):
-        pass
+    def __init__(self, screen, size, init_center_pos, speed, color):
+        super().__init__(screen, size, init_center_pos, speed, color)
 
-    def intersect(self, vector:tuple[int], location:tuple[int], axis_x) -> float:
+        self.cached_position = None
+
+    def update(self):
+        if self.ball_moving_towards_me():
+            ball_half_width = self.ball.rect.width / 2
+            paddle_axis = self.rect.right + ball_half_width if self.ball.speed[0] < 0 else self.rect.left - ball_half_width
+            y = self.intersect(self.ball.speed, self.ball.rect.center, paddle_axis)
+            y = self.bound(y, 0, self.screen.get_height())
+            target = np.array([paddle_axis, y], dtype=int) #! Round to int!
+            # self.drift_towards((paddle_axis, y))
+
+        else:
+            target = self.screen_center
+
+        if self.cached_position is None or np.abs(target[1] - self.cached_position[1]) >= self.rect.height / 2:
+            self.cached_position = target
+
+        self.drift_towards(self.cached_position)
+        self.window_correction()
+        self.old_rect = self.rect.copy()
+
+
+    @staticmethod
+    def intersect(vector:tuple[int], location:tuple[int], axis_x:float) -> float:
         # ax + by + c = 0
         # c = -(ax + by): (-b, a)=target_speed, (x, y)=target_center
         # y = (ax + c)/(-b): (-b, a)=target_speed, x=axis_x, (x, y)=intersection_coordinates
-        pass
+        normal = np.array(vector[::-1])
+        normal[0] *= -1
 
-    def bound(self, y:float, lower_bound:int, upper_bound:int) -> float:
-        pass
-        #todo Bound y between lb and ub
+        c = -np.dot(normal, np.array(location))
+        y:float = (normal[0] * axis_x + c)/(-normal[1])
+
+        return y
+
+    @staticmethod
+    def bound(y:float, lower_bound:int, upper_bound:int) -> float:
+        if y >= lower_bound and y <= upper_bound:
+            return y
+        
+        if y < lower_bound:
+            y0 = np.abs(lower_bound - y)
+            return PongBotAdvanced.bound(y + 2*y0, lower_bound, upper_bound)
+        
+        if y > upper_bound:
+            y0 = np.abs(upper_bound - y)
+            return PongBotAdvanced.bound(y - 2*y0, lower_bound, upper_bound)
 
 
 

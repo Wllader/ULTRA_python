@@ -1,5 +1,5 @@
 import pygame as pg, numpy as np
-from pong_entities import PongPlayer, PongBall, PongBot
+from pong_entities import PongPlayer, PongBall, PongBot, PongBotAdvanced
 from game_controller import GameController
 
 pg.init()
@@ -24,7 +24,7 @@ screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("Pong!")
 gc = GameController()
 
-player1 = PongBot(
+player1 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (55, CENTER[1]),
@@ -32,7 +32,7 @@ player1 = PongBot(
     (0, 255, 0)
 )
 
-bot = PongBot(
+bot = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (W-55, CENTER[1]),
