@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from enum import Enum, auto
 from game_controller import GameController
+from spritesheet_sr_fc import SpriteSheet
 
 #Todo Vytvořit základní PongEntity
 #Todo Odvodit od ní PongPlayer, PongBot a PongBall objekty a implementovat jejich základní chování
@@ -14,9 +15,10 @@ class MovingDirection(Enum):
 
 
 class PongEntity(pg.sprite.Sprite):
-    def __init__(self, screen:pg.Surface, size:tuple[int], init_center_pos:tuple[int], speed:tuple[int], color:tuple[int]):
+    def __init__(self, screen:pg.Surface, size:tuple[int], init_center_pos:tuple[int], speed:tuple[int], color:tuple[int], spritesheet:SpriteSheet=None):
         super().__init__()
         self.gc = GameController()
+        self.sheet = spritesheet
 
         self.speed = np.array(speed)
         self.color = np.array(color, dtype=np.uint8)
@@ -34,6 +36,8 @@ class PongEntity(pg.sprite.Sprite):
 
     @property
     def image(self):
+        if self.sheet:
+            self._image = self.sheet.get_image()
         return self._image
     
     @property
@@ -74,8 +78,8 @@ class PongPlayer(PongEntity):
 
 
 class PongBot(PongEntity):
-    def __init__(self, screen, size, init_center_pos, speed, color):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color, spritesheet:SpriteSheet=None):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self.ball:PongEntity = None
 
@@ -110,8 +114,8 @@ class PongBot(PongEntity):
 
 
 class PongBotAdvanced(PongBot): #todo
-    def __init__(self, screen, size, init_center_pos, speed, color):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color, spritesheet:SpriteSheet=None):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self.cached_position = None
 
@@ -164,8 +168,8 @@ class PongBotAdvanced(PongBot): #todo
 
 
 class PongBall(PongEntity):
-    def __init__(self, screen, size, init_center_pos, speed, color):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color, spritesheet:SpriteSheet=None):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self._image.fill((0, 0, 0, 0))
         pg.draw.ellipse(self._image, self.color, self._image.get_rect())
@@ -174,7 +178,11 @@ class PongBall(PongEntity):
 
     @property
     def image(self):
-        pg.draw.ellipse(self._image, self.color, self._image.get_rect())
+        if self.sheet:
+            self._image = self.sheet.get_image()
+        else:
+            pg.draw.ellipse(self._image, self.color, self._image.get_rect())
+
         return self._image
 
     def update(self):
