@@ -1,7 +1,7 @@
 import pygame as pg, numpy as np
 from game_controller import GameController
 from game_entities import Dino
-from spritesheet_sr_fc import SpriteSheet
+from spritesheet_mr_d import SpriteSheet
 
 pg.init()
 

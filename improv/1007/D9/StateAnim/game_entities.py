@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from game_controller import GameController
-from spritesheet_sr_fc import SpriteSheet
+from spritesheet_mr_d import SpriteSheet
+from enum import Enum, auto
 
 
 class Entity(pg.sprite.Sprite):
@@ -42,7 +43,7 @@ class Entity(pg.sprite.Sprite):
         if self.rect.right < 0:
             self.rect.left = w
         elif self.rect.left > w:
-            self.rect.bottom = 0
+            self.rect.right = 0
 
     def update(self):
         super().update()
@@ -50,19 +51,50 @@ class Entity(pg.sprite.Sprite):
 
 
 class Dino(Entity):
+    class State(Enum):
+        Idle = auto()
+        Walk = auto()
+
+    class Direction(Enum):
+        Right = 0
+        Left = 1
+
+
     def __init__(self, screen, size, init_pos, spritesheet = None, speed:float=5.):
         super().__init__(screen, size, init_pos, spritesheet)
 
         self.speed = speed
+        self.state = self.State.Idle
+        self.direction = self.Direction.Right
+
+        self.sheet.add_animation("idle", [ np.array([i, 0]) for i in range(4) ])
+        self.sheet.add_animation("walk", [ np.array([i, 0]) for i in range(4, 10) ])
+        self.sheet.set_animation("idle", 150)
+
+    @property
+    def image(self):
+        if self.sheet is None:
+            self._image.fill((45, 212, 32))
+        else:
+            self._image = pg.transform.flip(self.sheet.frame, self.direction.value, 0).convert_alpha()
+
+        return self._image
 
     def update(self):
+        self.state = self.State.Idle
+
         keys = pg.key.get_pressed()
         if keys[pg.K_a]:
             self.rect.x -= self.speed * self.dt
+            self.direction = self.Direction.Left
+            self.state = self.State.Walk
 
         if keys[pg.K_d]:
             self.rect.x += self.speed * self.dt
+            self.direction = self.Direction.Right
+            self.state = self.State.Walk
 
         self.rect.y += self.gravitiy * self.dt
 
+        self.sheet.set_animation(self.state.name)
         self.window_correction()
