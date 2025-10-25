@@ -8,9 +8,9 @@ class SpriteSheet:
         self.scale = scale
         self.default_index = default_index
 
-        self.animations:dict[str, list[pg.Surface]] = dict()
+        self.animations:dict[str, np.ndarray[pg.Surface]] = dict()
         self.animation_state:str = None
-        self.current_animation:list[pg.Surface] = [self.get_image()]
+        self.current_animation:np.ndarray[pg.Surface] = np.array([self.get_image()])
 
         self.clock = pg.time.Clock()
         self.frame_time = 250
@@ -30,11 +30,30 @@ class SpriteSheet:
         return image
 
     def add_animation(self, name:str, frames:list[int]):
-        pass
+        self.animations[name.lower()] = np.array([ self.get_image(fi) for fi in frames ])
 
     def set_animation(self, name:str, frame_time:int=None):
-        pass
+        name = name.lower()
+        if name == self.animation_state: return
+        if frame_time is not None: self.frame_time = frame_time
+
+        self.animation_state = name
+        self.current_animation = self.animations[name]
+        self.frame_index = 0
+
 
     @property
     def frame(self):
-        pass
+        if not self.animation_state:
+            return self.get_image()
+        
+        self.current_frame_time += self.clock.tick()
+        if self.current_frame_time >= self.frame_time:
+            self.current_frame_time = 0
+            # self.frame_index += 1
+            # self.frame_index %= len(self.current_animation)
+            self.frame_index = (self.frame_index + 1) % len(self.current_animation)
+
+        #~ return self.animations[self.animation_state][self.frame_index]
+        return self.current_animation[self.frame_index]
+

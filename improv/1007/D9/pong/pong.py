@@ -28,6 +28,8 @@ gc = GameController()
 bg = pg.image.load("Sprites/Bg.png")
 bg = pg.transform.scale_by(bg, W / bg.get_width())
 
+font = pg.font.Font("freesansbold.ttf", 32)
+
 player1 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
@@ -63,9 +65,13 @@ ball = PongBall(
     WHITE,
     SpriteSheet(
         "Sprites/Ball.png",
-        (16, 16)
+        (16, 16),
+        1
     )
 )
+
+ball.sheet.add_animation("shimmer", list(range(4)))
+ball.sheet.set_animation("shimmer", 1000)
 
 ball.g_bounce.add(player1, bot)
 bot.ball = ball
@@ -77,6 +83,19 @@ player1.ball = ball
 g_entites = pg.sprite.Group(
     player1, bot, ball
 )
+
+
+text = "0   0"
+text_rendered = font.render(text, True, WHITE)
+text_rect = text_rendered.get_rect()
+text_rect.center = CENTER
+
+def score_counter():
+    score_text = f"{gc.get_score(0)}   {gc.get_score(1)}"
+    score = font.render(score_text, True, WHITE)
+    score_rect = score.get_rect(center=CENTER)
+
+    return score, score_rect
 
 
 #! Game loop
@@ -94,6 +113,8 @@ while running:
     # Draw
     screen.fill(GREY * 28)
     screen.blit(bg, (0, 0))
+    pg.draw.line(screen, WHITE, (CENTER[0], 0), (CENTER[0], H))
+    screen.blit(*score_counter())
     g_entites.draw(screen)
 
 

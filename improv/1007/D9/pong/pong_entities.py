@@ -3,11 +3,10 @@ from enum import Enum, auto
 from game_controller import GameController
 from spritesheet_sr_fc import SpriteSheet
 
-#Todo Vytvořit základní PongEntity
-#Todo Odvodit od ní PongPlayer, PongBot a PongBall objekty a implementovat jejich základní chování
-# Pokročilé chování a další věci budeme probírat v dalších lekcích
-# Stačí logika na úrovni square, kterou jsme dělali v úvodním showcasu PyGame
-#  ale pokud budete chtít, vyhrajte si společně s dokumentací PyGame
+
+GREY = np.ones(3, dtype=np.uint8)
+WHITE = GREY * 255
+BLACK = GREY * 0
 
 class MovingDirection(Enum):
     Horizontal = auto()
@@ -27,7 +26,7 @@ class PongEntity(pg.sprite.Sprite):
         self._image = pg.Surface(size, pg.SRCALPHA)
         self._image.fill(self.color)
 
-        self.rect = self._image.get_rect(center=np.array(init_center_pos))
+        self._rect = self._image.get_rect(center=np.array(init_center_pos))
         self.old_rect = self.rect.copy()
 
     @property
@@ -37,8 +36,13 @@ class PongEntity(pg.sprite.Sprite):
     @property
     def image(self):
         if self.sheet:
-            self._image = self.sheet.get_image()
+            self._image = self.sheet.frame
         return self._image
+    
+    @property
+    def rect(self):
+        self._rect = self._image.get_rect(topleft=self._rect.topleft)
+        return self._rect
     
     @property
     def screen_center(self):
@@ -82,7 +86,6 @@ class PongBot(PongEntity):
         super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self.ball:PongEntity = None
-
 
     def update(self):
         if self.ball is None: return
@@ -172,25 +175,25 @@ class PongBall(PongEntity):
         super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self._image.fill((0, 0, 0, 0))
-        pg.draw.ellipse(self._image, self.color, self._image.get_rect())
+        pg.draw.ellipse(self._image, self.color, self.rect)
 
         self.g_bounce = pg.sprite.Group()
 
     @property
     def image(self):
         if self.sheet:
-            self._image = self.sheet.get_image()
+            self._image = self.sheet.frame
         else:
-            pg.draw.ellipse(self._image, self.color, self._image.get_rect())
+            pg.draw.ellipse(self._image, self.color, self.rect)
 
         return self._image
 
     def update(self):
         self.rect.x += self.speed[0] * self.dt
-        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+        self.handle_collisions(MovingDirection.Horizontal)
 
         self.rect.y += self.speed[1] * self.dt
-        self.speed *= self.handle_collisions(MovingDirection.Vertical)
+        self.handle_collisions(MovingDirection.Vertical)
 
         self.window_correction()
         self.old_rect = self.rect.copy()
@@ -200,41 +203,63 @@ class PongBall(PongEntity):
             o:PongEntity
 
             self.color = o.color
+            half_width = self.rect.width / 2
+            half_height = self.rect.height / 2
 
             match direction:
                 case MovingDirection.Horizontal:
                     if self.rect.left <= o.rect.right and self.old_rect.left >= o.rect.right:
-                        self.rect.left = o.rect.right
-                        return np.array([-1, 1])
+                        self.bounce(o.rect.right + half_width, 0)
+
                     elif self.rect.right >= o.rect.left and self.old_rect.right <= o.rect.left:
-                        self.rect.right = o.rect.left
-                        return np.array([-1, 1])
+                        self.bounce(o.rect.left - half_width, 0)
 
                 case MovingDirection.Vertical:
                     if self.rect.top <= o.rect.bottom and self.old_rect.top > o.rect.bottom:
-                        self.rect.top = o.rect.bottom
-                        return np.array([1, -1])
-                    elif self.rect.bottom >= o.rect.top and self.old_rect.bottom < o.rect.top:
-                        self.rect.bottom = o.rect.top
-                        return np.array([1, -1])
+                        self.bounce(o.rect.bottom + half_height, 1)
 
-        return 1
+                    elif self.rect.bottom >= o.rect.top and self.old_rect.bottom < o.rect.top:
+                        self.bounce(o.rect.top - half_height, 1)
 
 
     def window_correction(self):
         super().window_correction()
 
-        if self.rect.top <= 0 or self.rect.bottom >= self.screen.get_height():
-            self.speed[1] *= -1
+        if self.rect.top <= 0:
+            self.bounce(0 + self.rect.height / 2, 1)
+        elif self.rect.bottom >= (h := self.screen.get_height()):
+            self.bounce(h - self.rect.height / 2, 1)
 
-        if self.rect.left <= 0 or self.rect.right >= self.screen.get_width():
+        if (l := self.rect.left <= 0) or self.rect.right >= self.screen.get_width():
             self.speed[0] *= -1
             shoh = self.rect.height // 2
             self.rect.center = np.array([
                 self.screen_center[0],
                 np.random.randint(shoh, self.screen.get_height() - shoh)
             ])
+            self.color = WHITE
 
+            self.gc.score(1) if l else self.gc.score(0)
+
+    @staticmethod
+    def ccd(start:np.ndarray, end:np.ndarray, axis:int, index:int) -> tuple[np.ndarray, float]:
+        # A := start, B := end
+        # (1-t)*A + t*B = axis
+        # (1-t)*A_y + t*B_y = axis_y
+        # -> t = (axis-a)/(b-a)
+
+        t = ((axis - start)/(end - start))[index]
+        return (1-t)*start + t*end, t
+
+
+    def bounce(self, axis:float, index:int):
+        c, t = self.ccd(
+            np.array(self.old_rect.center), np.array(self.rect.center),
+            axis, index
+        )
+
+        self.speed[index] *= -1
+        self.rect.center = c + self.speed[index] * (1-t)
     
 
     
