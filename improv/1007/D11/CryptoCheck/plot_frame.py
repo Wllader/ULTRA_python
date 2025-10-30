@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import requests
 from typing import Any
+import pandas as pd
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as FigC
@@ -49,8 +50,18 @@ class PlotFrame(ctk.CTkFrame):
         response = requests.get(url, params)
         return response.json()
     
+
+    def fetch_crypto_data_v2(self, symbol, days) -> pd.DataFrame|None:
+        pass
+        # Fetch json data
+        # Check if valid
+        # Create table (dataframe)
+        # Format date times
+        # Return table
+    
     def update_plot(self, symbol:str, days:int):
         data = self.fetch_crypto_data(symbol, days)
+        # Use dataframes
 
         if "status" in data:
             print(data["status"])
@@ -64,11 +75,14 @@ class PlotFrame(ctk.CTkFrame):
             w.destroy()
 
         timestamp, price = zip(*data["prices"])
+        timestamp = pd.to_datetime(timestamp, unit="ms")
+
         fig, ax = plt.subplots()
         ax.plot(timestamp, price)
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
         ax.set_title(f"{symbol.capitalize()} price History over last {days} days")
+        ax.tick_params("x", rotation=60)
         ax.grid(True)
 
         fig.tight_layout()
