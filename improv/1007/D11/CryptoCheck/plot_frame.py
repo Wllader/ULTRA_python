@@ -2,15 +2,21 @@ import customtkinter as ctk
 import requests
 from typing import Any
 import pandas as pd
+from data_fetcher import CryptoFetcher, Fetcher
+from input_frame import TickerType
+import logging
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as FigC
 
 
 class PlotFrame(ctk.CTkFrame):
-    def __init__(self, master, symbol:str, **kwargs):
+    def __init__(self, master, symbol:str, type_:TickerType=TickerType.COIN, **kwargs):
         super().__init__(master, **kwargs)
         self.symbol = symbol
+        self.type = type_
+        self.logger = logging.getLogger(self.__class__.__name__)
+
 
         self.canvas_frame = ctk.CTkFrame(self)
         self.canvas_frame.pack(fill="both", expand=True)
@@ -39,46 +45,36 @@ class PlotFrame(ctk.CTkFrame):
         self.days_slider.set(value)
         self.slider_label.configure(text=f"Adjust Number of days: {int(value)}")
 
-    
-    def fetch_crypto_data(self, symbol, days) -> dict[str, Any]:
-        url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
-        params = {
-            "vs_currency" : "usd",
-            "days" : days
-        }
+    def fetch_data(self, symbol, days) -> pd.DataFrame|None:
+        f: Fetcher
 
-        response = requests.get(url, params)
-        return response.json()
-    
+        match self.type:
+            case TickerType.COIN:
+                url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
+                params = {
+                    "vs_currency" : "usd",
+                    "days" : days
+                }
+                f = CryptoFetcher(url)
 
-    def fetch_crypto_data_v2(self, symbol, days) -> pd.DataFrame|None:
-        pass
-        # Fetch json data
-        # Check if valid
-        # Create table (dataframe)
-        # Format date times
-        # Return table
+
+            case TickerType.SHARE:
+                self.logger.warning("Not implemented")
+                return None
+                f = ShareFetcher(...)
+
+
+        return f.get(symbol, params)
+        
     
     def update_plot(self, symbol:str, days:int):
-        data = self.fetch_crypto_data(symbol, days)
-        # Use dataframes
+        df = self.fetch_data(symbol, days)
 
-        if "status" in data:
-            print(data["status"])
-            return
-        
-        if "error" in data:
-            print(data["error"])
-            return
-        
         for w in self.canvas_frame.winfo_children():
             w.destroy()
 
-        timestamp, price = zip(*data["prices"])
-        timestamp = pd.to_datetime(timestamp, unit="ms")
-
         fig, ax = plt.subplots()
-        ax.plot(timestamp, price)
+        ax.plot(df["Timestamp"], df["Price"])
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
         ax.set_title(f"{symbol.capitalize()} price History over last {days} days")
