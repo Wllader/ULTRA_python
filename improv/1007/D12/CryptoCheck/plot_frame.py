@@ -55,7 +55,7 @@ class PlotFrame(ctk.CTkFrame):
                     "vs_currency" : "usd",
                     "days" : days
                 }
-                f = CryptoFetcher(url)
+                f = CryptoFetcher(url, "cache.db")
 
 
             case TickerType.SHARE:

@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from typing import Any, override
 import pandas as pd, requests, logging
 import sqlite3
+from datetime import datetime, timedelta, timezone
+from json import dumps as jdumps
 
 
 class Fetcher(ABC):
@@ -40,6 +42,12 @@ class Fetcher(ABC):
 
         self.logger.info("Database connection initialized")
 
+    def delete_expired(self, conn:sqlite3.Connection):
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM t_Cache WHERE Exp < CURRENT_TIMESTAMP")
+        self.logger.info("Expired records pruned")
+
 
 class CryptoFetcher(Fetcher):
     def fetch_data(self, params) -> dict[str, Any]:
@@ -65,6 +73,31 @@ class CryptoFetcher(Fetcher):
 
         self.logger.info("Formatted!")
         return df
+    
+    def cache_data(self, conn:sqlite3.Connection, tick:str, params:dict, data:pd.DataFrame|None) -> bool:
+        if data is None: return False
+
+        data["Exp"] = datetime.now(timezone.utc) + timedelta(seconds=self.expiration)
+
+        data["Params"] = jdumps(params, sort_keys=True)
+        data["Tick"] = tick
+
+        data.to_sql("t_Cache", conn, index=False, if_exists="append")
+        self.logger.info("Cached!")
+        return True
+    
+    def get_cached(self, conn:sqlite3.Connection, tick:str, params:dict) -> pd.DataFrame|None:
+        df:pd.DataFrame = pd.read_sql("""
+            SELECT Price, Timestamp FROM t_Cache
+            WHERE Params = ? AND Tick = ? AND Exp >= CURRENT_TIMESTAMP
+        """, conn, params=(jdumps(params, sort_keys=True), tick), parse_dates={"Timestamp" : {"format":"ISO8601"}}) #! parse dates
+
+        if df.empty:
+            self.logger.info("Cache miss: Expired or empty!")
+            return None
+        
+        self.logger.info("Cache hit!")
+        return df
 
 
     @override
@@ -77,6 +110,20 @@ class CryptoFetcher(Fetcher):
         #   Format
         #   Save to DB
         #   Return
+        with sqlite3.connect(self.cache_db) as conn:
+            self.delete_expired(conn)
+
+            if (d := self.get_cached(conn, tick, params)) is not None:
+                return d
+            
+            data = self.fetch_data(params)
+            data = self.format_data(data)
+
+            if self.cache_data(conn, tick, params, data):
+                return data[["Price", "Timestamp"]]
+            
+            return None
+
 
 
         data = self.fetch_data(params)

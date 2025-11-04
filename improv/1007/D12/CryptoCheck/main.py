@@ -3,6 +3,7 @@ from input_frame import InputFrame
 from plot_frame import PlotFrame
 
 from typing import Callable
+import logging
 
 class CryptoCheck(ctk.CTk):
     def __init__(self):
@@ -50,5 +51,7 @@ class CryptoCheck(ctk.CTk):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     app = CryptoCheck()
     app.mainloop()
