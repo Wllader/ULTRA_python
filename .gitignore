@@ -176,3 +176,6 @@ cython_debug/
 # Database and other bulk files
 *.db
 *.json
+
+# Compressed
+*.gz
