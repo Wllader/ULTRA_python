@@ -45,8 +45,13 @@ class Fetcher(ABC):
     def delete_expired(self, conn:sqlite3.Connection):
         cursor = conn.cursor()
 
-        cursor.execute("DELETE FROM t_Cache WHERE Exp < CURRENT_TIMESTAMP")
-        self.logger.info("Expired records pruned")
+        cursor.execute("SELECT COUNT() FROM t_Cache WHERE Exp < CURRENT_TIMESTAMP")
+        n = cursor.fetchone()[0]
+
+
+        if n > 0:
+            cursor.execute("DELETE FROM t_Cache WHERE Exp < CURRENT_TIMESTAMP")
+            self.logger.info("Expired records pruned")
 
 
 class CryptoFetcher(Fetcher):
