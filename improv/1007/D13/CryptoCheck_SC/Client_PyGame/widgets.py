@@ -47,8 +47,8 @@ class Widget(pg.sprite.Sprite):
     
     @staticmethod
     def align_center(a:tuple, b:tuple):
-        a_ = np.array()
-        b_ = np.array()
+        a_ = np.array(a)
+        b_ = np.array(b)
         return np.abs(a_-b_)//2
     
     def hover(self) -> bool:
@@ -75,8 +75,81 @@ class Button(Widget):
     def __init__(self, screen, pos, size, text:str, font=None, fg:tuple[int] = BLACK, bg:tuple[int] = WHITE, command:Callable=lambda: print("Clicked!")):
         super().__init__(screen, pos, size)
 
+        self.text = text
+        self.font:pg.font.Font = font or pg.font.SysFont("Calibri", self.size[1]//2)
+        self.fg = fg
+        self.bg = bg
+        self.command = command
+
+    @property
+    def image(self):
+        self._image.fill(self.bg)
+        label = self.font.render(self.text, True, self.fg)
+        pos = self.align_center(self.size, label.get_rect().size)
+        self._image.blit(label, pos)
+
+        if self.mouse_held[0]:
+            self._image.fill(GREY * 150, special_flags=pg.BLEND_RGBA_MULT)
+        elif self.hover():
+            self._image.fill(GREY * 200, special_flags=pg.BLEND_RGBA_MULT)
+
+        return self._image
+    
+    def update(self, event=None):
+        super().update(event)
+
+        if self.click(0) == ClickState.RELEASED:
+            self.command()
+
 
 class Entry(Widget):
     def __init__(self, screen, pos, size, font=None, fg:tuple[int] = WHITE, bg:tuple[int] = GREY*28, default_text:str="", tooltip_text:str=""):
         super().__init__(screen, pos, size)
 
+        self.font = font or pg.font.SysFont("Calibri", self.size[1]//2)
+        self.fg = fg
+        self.bg = bg
+        self.text = default_text
+        self.tooltip = tooltip_text
+
+        self.selected = False
+
+    @property
+    def image(self):
+        self._image.fill(self.bg)
+        if self.has_text():
+            label = self.font.render(self.text, True, self.fg)
+        else:
+            label = self.font.render(self.tooltip, True, self.fg * .6)
+
+        pos = self.align_center(self.size, label.get_rect().size)
+        self._image.blit(label, pos)
+
+        if self.selected:
+            self._image.fill(GREY * 60, special_flags=pg.BLEND_RGBA_ADD)
+        
+        if self.hover():
+            self._image.fill(GREY * 200, special_flags=pg.BLEND_RGBA_MULT)
+
+        return self._image
+
+    def has_text(self) -> bool:
+        return self.text != ""
+    
+    def update(self, event:pg.event.Event=None):
+        super().update(event)
+
+        match self.click(0):
+            case ClickState.CLICKED:
+                self.selected = True
+            case ClickState.MISSED:
+                self.selected = False
+
+        if self.selected and event and event.type == pg.KEYDOWN:
+            match event.key:
+                case pg.K_BACKSPACE:
+                    self.text = self.text[:-1]
+                case pg.K_RETURN:
+                    self.selected = False
+                case _:
+                    self.text += event.unicode
