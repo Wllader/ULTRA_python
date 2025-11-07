@@ -105,3 +105,85 @@ class CosineSimilarityRecognizer(RecognizerStrategy):
         scores /= scores.max()
 
         return scores if scores.max() > 0 else np.zeros(10)
+    
+
+class MulticlassLogisticRegressionRecognizer(RecognizerStrategy):
+    def __init__(self, X_train:np.ndarray, y_train:np.ndarray, epochs:int=10, batch_size:int=10, train_bias=True, seed=None):
+        super().__init__()
+        self.train_bias = train_bias
+
+        generator = np.random.RandomState(seed=seed)
+        N = X_train.shape[0]
+
+        X_train_ = X_train.reshape([N, -1])
+        X_train_ = X_train_ / X_train_.max()
+
+        if self.train_bias:
+            X_train_ = np.pad(X_train_, [(0, 0), (0, 1)], constant_values=1)
+
+        D = X_train_.shape[1]
+        K = 10
+
+        y_train_ohe = np.eye(y_train.max() + 1, dtype=bool)[y_train]
+
+        B = batch_size
+
+        alpha = 0.01
+
+        self.weights = np.zeros((D, K), dtype=np.float64)
+
+        e = 0
+        early_stop = False
+        while e < epochs and not early_stop:
+            permutation = generator.permutation(X_train_.shape[0])
+
+            for batch_index in range(N//B):
+                _start, _stop = np.array([batch_index, batch_index+1]) * B
+                
+                X_ = X_train_[permutation[_start:_stop]]
+                t_ = y_train_ohe[permutation[_start:_stop]]
+
+
+                g = X_.T @ (self.softmax(X_ @ self.weights) - t_)
+
+                self.weights -= alpha* g/B
+            
+            e += 1
+
+        
+        # print(self.weights)
+
+    @staticmethod
+    def ReLU(x:np.ndarray):
+        return np.where(x > 0, x, 0)
+    
+    @staticmethod
+    def softmax(x:np.ndarray):
+        _x:np.ndarray = x - x.max()
+        _x = np.exp(_x)
+        return   _x / np.sum(_x, axis=1, keepdims=1)
+
+    def predict(self, X: np.ndarray, normalize:bool = True):
+        X_ = np.reshape(X, X.shape[0] * X.shape[1], copy=True)
+        X_ = X_ / X_.max()
+
+        if self.train_bias:
+            X_ = np.pad(X_, [(0, 1)], constant_values=1)
+
+        scores = X_ @ self.weights
+        if normalize:
+            scores -= scores.min()
+            scores /= scores.max()
+
+        return scores if scores.max() > 0 else np.zeros_like(scores)
+
+    def score(self, X:np.ndarray, y:np.ndarray):
+        X_:np.ndarray = np.reshape(X, [X.shape[0], -1], copy=True)
+        X_ = X_ / X_.max()
+        if self.train_bias:
+            X_ = np.pad(X_, [(0, 0), (0, 1)], constant_values=1)
+
+        y_pred = (X_ @ self.weights).argmax(axis=1) == y
+        return y_pred.sum() / len(y)
+
+

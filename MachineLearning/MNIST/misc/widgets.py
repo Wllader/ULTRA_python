@@ -3,6 +3,7 @@ from enum import Enum, auto
 from typing import Callable
 from misc.game_controller import GameController
 from misc.tween import Tween
+from scipy.ndimage import center_of_mass, shift
 
 GREY = np.ones(3, dtype=np.uint8)
 WHITE = GREY * 255
@@ -27,6 +28,7 @@ class Widget(pg.sprite.Sprite):
         self._image = pg.Surface(size)
 
         self.mouse_held = np.zeros(3, dtype=bool)
+        self.enabled = True
 
     def update(self, event:pg.event.Event=None):
         super().update()
@@ -79,6 +81,9 @@ class Widget(pg.sprite.Sprite):
         
     def hover(self) -> bool:
         return self._rect.collidepoint(pg.mouse.get_pos())
+    
+    def disable(self): self.enabled = False
+    def enable(self): self.enabled = True
 
 
 class Label(Widget):
@@ -178,7 +183,38 @@ class Entry(Widget):
                     self.selected = False
                 case _:
                     self.text += event.unicode
-    
+
+
+class CheckBox(Widget):
+    def __init__(self, screen, pos, size, checked=False):
+        super().__init__(screen, pos, size)
+
+        self.checked = checked
+
+    @property
+    def image(self):
+        pg.draw.rect(self._image, WHITE, (0, 0, *self.size), 1)
+
+        if self.checked:
+            pg.draw.lines(self._image, WHITE, False, [(0, 0), (self.size[0] / 2, self.size[1]), (self.size[0], 0)])
+
+        if self.mouse_held[0]:
+            pg.draw.line(self._image, WHITE, (0, 0), (self.size[0] / 2, self.size[1]))
+            self._image.fill(GREY * 150, special_flags=pg.BLEND_RGBA_MULT)
+        elif self.hover():
+            self._image.fill(GREY * 200, special_flags=pg.BLEND_RGBA_MULT)
+
+
+        return self._image
+
+    def get(self):
+        return self.checked
+
+    def update(self, event=None):
+        super().update(event)
+
+        if self.click(0) == ClickState.RELEASED:
+            self.checked = not self.checked
 
 
 class Canvas(Widget):
@@ -202,8 +238,10 @@ class Canvas(Widget):
             surf = pg.surfarray.make_surface(np.repeat(self.pixels[..., None], 3, axis=2).swapaxes(0,1))
             self._image.blit(pg.transform.scale(surf, self.size), (0, 0))            
 
-            pg.draw.rect(self._image, WHITE, (0, 0, *self.size), 1)
+            pg.draw.rect(self._image, WHITE if self.enabled else GREY * 128, (0, 0, *self.size), 1)
             self.dirty = False
+
+
         return self._image
 
 
@@ -276,6 +314,32 @@ class Canvas(Widget):
         scaled = (arr * 255).astype(np.uint8) if arr.max() <= 1 else arr
         self.pixels = scaled
         self.dirty = True
+
+    def get_centered_image(self) -> np.ndarray:
+        """
+        Centers a grayscale image (2D array) based on its intensity centroid.
+        Keeps output shape identical to input.
+        """
+        img = self.get_array()
+
+        # Normalize to [0,1] for stable weighting
+        img_f = img.astype(float)
+        if img_f.max() > 0:
+            img_f /= img_f.max()
+
+        # Compute center of mass (y, x)
+        cy, cx = center_of_mass(img_f)
+
+        # Target center (canvas middle)
+        ty, tx = np.array(img.shape) // 2
+
+        # Shift needed to center
+        shift_yx = (ty - cy, tx - cx)
+
+        # Apply translation (use bilinear interpolation)
+        centered = shift(img, shift=shift_yx, order=1, mode="constant", cval=0)
+
+        return centered.astype(np.uint8)
 
 
     def update(self, event: pg.event.Event = None):
