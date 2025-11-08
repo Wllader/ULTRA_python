@@ -220,8 +220,6 @@ class CheckBox(Widget):
 class Canvas(Widget):
     def __init__(self, screen, pos, size, resolution=(28, 28)):
         super().__init__(screen, pos, size)
-        self._image = pg.Surface(size, depth=8)
-
 
         self.resolution = np.array(resolution)
         self.pixels = np.zeros((*self.resolution, ), dtype=np.uint8)
@@ -302,17 +300,16 @@ class Canvas(Widget):
         if normalize:
             arr = arr / 255.0
         return arr
-    
-    def set_array(self, data: np.ndarray):
-        self.pixels[:] = data
-        self.dirty = True
 
-    def from_array(self, arr: np.ndarray):
-        """Načte 2D nebo 3D pole a vykreslí jej."""
-        if arr.ndim == 2:
-            arr = np.repeat(arr[..., None], 3, axis=2)
-        scaled = (arr * 255).astype(np.uint8) if arr.max() <= 1 else arr
-        self.pixels = scaled
+    def from_array(self, arr: np.ndarray, normalize:bool=False):
+        """Načte 2D pole a vykreslí jej."""
+        if normalize:
+            tmp = arr.copy()
+            tmp -= tmp.min()
+            tmp /= tmp.max()
+            tmp *= 255
+
+        self.pixels[:] = tmp.astype(np.uint8) if normalize else arr
         self.dirty = True
 
     def get_centered_image(self) -> np.ndarray:

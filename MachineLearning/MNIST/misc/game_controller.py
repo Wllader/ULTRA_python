@@ -12,7 +12,7 @@ class GameController:
 
         return cls.instance
 
-    def tick(self, fps:int, factor:int=1):
+    def tick(self, fps:int=0, factor:int=1):
         self.dt = self.clock.tick(fps) / factor
 
     def stop(self):
