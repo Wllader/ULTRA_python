@@ -350,7 +350,6 @@ class Canvas(Widget):
                 self.draw_point(rel)
 
             case ClickState.HELD:
-                lx, ly = self._last_pos
                 self.draw_line(self._last_pos, rel)
 
 
@@ -360,7 +359,6 @@ class Canvas(Widget):
                 self.draw_point(rel, 0)
 
             case ClickState.HELD:
-                lx, ly = self._last_pos
                 self.draw_line(self._last_pos, rel, 0)
 
         self._last_pos = rel
