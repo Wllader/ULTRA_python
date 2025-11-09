@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from enum import Enum, auto
 from typing import Callable, Self
+from scipy.ndimage import center_of_mass, shift
 
 GREY = np.ones(3, dtype=np.uint8)
 WHITE = GREY * 255
@@ -276,6 +277,23 @@ class Canvas(Widget):
             arr = arr / 255
         return arr
     
+    def get_centered_image(self) -> np.ndarray:
+        img = self.get_array()
+
+        img_f = img.astype(float)
+        if (m := img_f.max()) > 1:
+            img_f /= m
+
+        cy, cx = center_of_mass(img_f)
+
+        ty, tx = np.array(img.shape) // 2
+
+        shift_yx = (ty - cy, tx - cx)
+
+        centered = shift(img, shift=shift_yx, order=1, mode="constant", cval=0)
+
+        return centered.astype(np.uint8)
+
     def from_array(self, arr:np.ndarray, normalize:bool=False):
         if normalize:
             tmp:np.ndarray = arr.copy()

@@ -8,6 +8,14 @@ class Activations:
         _x:np.ndarray = x - x.max()
         _x = np.exp(_x)
         return _x / np.sum(_x, axis=1, keepdims=1)
+    
+    @staticmethod
+    def ReLU(x:np.ndarray) -> np.ndarray:
+        return np.where(x > 0, x, 0)
+    
+    @staticmethod
+    def ReLU_grad(x:np.ndarray) -> np.ndarray:
+        return (x > 0).astype(float)
 
 
 class RecognizerStrategy(ABC):
@@ -146,6 +154,115 @@ class MulticlassLogisticRegression(RecognizerStrategy):
             scores /= scores.max()
 
         return scores if scores.max() > 0 else np.zeros_like(scores)
+
+
+
+class MultilayerPerceptronRecognizer(RecognizerStrategy):
+    def __init__(self,
+                 X_train:np.ndarray,
+                 y_train:np.ndarray,
+                 hidden_layers: tuple[int] = (16, 16),
+                 epochs: int = 10,
+                 batch_size: int = 32,
+                 learning_rate: float = .01,
+                 activation: tuple[Callable] = (Activations.ReLU, Activations.ReLU_grad),
+                 train_bias: bool = True,
+                 seed: int | None = None):
+        super().__init__(X_train, y_train, True)
+
+        self.train_bias = train_bias
+        self.alpha = learning_rate
+        generator = np.random.RandomState(seed)
+        N = X_train.shape[0]
+
+        X_train = X_train.reshape(N, -1).astype(np.float64)
+        X_train /= 255.
+
+        D = X_train.shape[1]
+        K = int(y_train.max()) + 1
+        y_onehot = np.eye(K, dtype=np.float64)[y_train]
+
+        self.act, self.act_grad = activation
+
+        layers = [X_train.shape[1], *hidden_layers, K]
+        self.weights = []
+
+        for i in range(len(layers) - 1):
+            fan_in = layers[i] + self.train_bias
+            fan_out = layers[i + 1]
+            limit = np.sqrt(2 / fan_in)
+
+            W = generator.uniform(-limit, limit, (fan_in, fan_out))
+            self.weights.append(W)
+
+        B = batch_size
+        for _epoch in range(epochs):
+            perm = generator.permutation(N)
+            for i in range(0, N, B):
+                idx = perm[i:i+B]
+
+                X_ = X_train[idx]
+                t_ = y_onehot[idx]
+
+                activations, preacts = self._forward(X_)
+                grads = self._backward(X_, t_, activations, preacts)
+
+                for j in range(len(self.weights)):
+                    self.weights[j] -= self.alpha * grads[j] / B 
+
+
+        
+    def _forward(self, X:np.ndarray):
+        activations = [X]
+        preacts = []
+
+        # hidden layers
+        for W in self.weights[:-1]:
+            A = self._add_bias(activations[-1])
+            Z = A @ W
+            preacts.append(Z)
+
+            A = self.act(Z)
+            activations.append(A)
+
+        #output layer
+        A = self._add_bias(activations[-1])
+        Z = A @ self.weights[-1]
+        preacts.append(Z)
+        activations.append(Activations.softmax(Z))
+
+        return activations, preacts
+    
+    def _backward(self, X, y_true, actiaviatons, preacts):
+        grads = [None for i in range(len(self.weights))]
+        delta = actiaviatons[-1] - y_true
+
+        for i in reversed(range(len(self.weights))):
+            A_prev = actiaviatons[i]
+            grads[i] = self._add_bias(A_prev).T @ delta
+
+            if i > 0:
+                Z_prev = preacts[i-1]
+                delta = delta @ self.weights[i].T
+                if self.train_bias:
+                    delta = delta[:, :-1]
+
+                delta *= self.act_grad(Z_prev)
+        return grads
+
+    def predict(self, X:np.ndarray, normalize:bool = True):
+        X = X.reshape(1, -1).astype(np.float64) #single image
+        if normalize:
+            X = X / X.max()
+
+        for W in self.weights[:-1]:
+            X = self.act(self._add_bias(X) @ W)
+
+        Z = self._add_bias(X) @ self.weights[-1]
+        scores = Activations.softmax(Z)
+
+        return scores.ravel()
+
 
 
 
