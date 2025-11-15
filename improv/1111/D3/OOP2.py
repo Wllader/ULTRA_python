@@ -2,12 +2,15 @@ from abc import ABC
 from dataclasses import dataclass
 
 
-
+@dataclass
 class Entity(ABC):
-    def __init__(self, name:str, hp:int):
-        super().__init__()
-        self.name = name
-        self.hp = hp
+    name:str
+    hp:int
+
+    # def __init__(self, name:str, hp:int):
+    #     super().__init__()
+    #     self.name = name
+    #     self.hp = hp
 
     def __repr__(self) -> str:
         return f"{self.name.capitalize()}: {max(self.hp, 0)}"
@@ -15,40 +18,49 @@ class Entity(ABC):
     def take_damage(self, dmg:int):
         self.hp -= dmg
 
+@dataclass
 class AttackingEntity(Entity, ABC):
-    def __init__(self, name, hp):
-        super().__init__(name, hp)
+    # def __init__(self, name, hp):
+    #     super().__init__(name, hp)
 
     def attack(self, dmg:int, target:Entity):
         target.take_damage(dmg)
 
+@dataclass
 class LoudEntity(Entity, ABC):
-    def __init__(self, name, hp, sound:str):
-        super().__init__(name, hp)
-        self.sound = sound
+    sound:str
+
+    # def __init__(self, name, hp, sound:str):
+    #     super().__init__(name, hp)
+    #     self.sound = sound
 
     def make_sound(self):
         print(self.sound)
 
 
-
+@dataclass
 class Enemy(AttackingEntity):
-    def __init__(self, name, hp, sound):
-        super().__init__(name, hp)
-        self.sound = sound
+    sound:str
+
+    # def __init__(self, name, hp, sound):
+    #     super().__init__(name, hp)
+    #     self.sound = sound
 
     def make_sound(self): #!
         print(self.sound)
 
+@dataclass
 class Npc(AttackingEntity):
-    def __init__(self, name, hp, quest:str):
-        super().__init__(name, hp)
-        self.quest = quest
+    quest:str
+
+    # def __init__(self, name, hp, quest:str):
+    #     super().__init__(name, hp)
+    #     self.quest = quest
 
     def get_quest(self):
         print(self.quest)
 
-
+# @dataclass
 class Critter(LoudEntity):
     pass
 
