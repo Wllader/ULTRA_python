@@ -1,5 +1,5 @@
 import pygame as pg, numpy as np
-from square import Square
+from square import Square, MovingSquare, PlayerSquare
 
 # Inicializace
 pg.init()
@@ -17,20 +17,29 @@ screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("My first game")
 clock = pg.time.Clock()
 
-p = Square(
+s = Square(
     screen,
-    (50, 100),
+    (50, 200),
     (60, 60)
 )
 
-p2 = Square(
+ms_1 = MovingSquare(
     screen,
-    (200, 50),
-    (100, 100),
-    (56, 128, 200)
+    (200, 200),
+    (40, 40),
+    (56, 128, 200),
+    (3, 0)
 )
 
-p3 = Square(
+ms_2 = MovingSquare(
+    screen,
+    (300, 300),
+    (60, 60),
+    (150, 128, 100),
+    (0, 2)
+)
+
+p = PlayerSquare(
     screen,
     (500, 500),
     (20, 20),
@@ -39,8 +48,11 @@ p3 = Square(
 )
 
 g_squares = pg.sprite.Group(
-    p, p2, p3
+    s, ms_1, ms_2, p
 )
+
+ms_1.collision_group.add(p, ms_2, s)
+ms_2.collision_group.add(p, ms_1, s)
 
 #! Game loop
 running = True

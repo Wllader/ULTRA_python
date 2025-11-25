@@ -61,29 +61,52 @@ class Entity(pg.sprite.Sprite):
 
 
 class Square(Entity):
+    pass
+
+class MovingSquare(Square):
     def __init__(self, screen, init_pos, size, color = (255, 255, 255), speed:tuple[int]=None):
         super().__init__(screen, init_pos, size, color)
 
         self.speed = np.array(speed) if speed else np.array((5, 5))
 
+    def window_collision(self):
+        if self.rect.top <= 0 or self.rect.bottom >= self.screen.get_height():
+            self.speed[1] *= -1
+
+        if self.rect.left <= 0 or self.rect.right >= self.screen.get_width():
+            self.speed[0] *= -1
+
+
+    def update(self, dt):
+        self.rect.y += self.speed[1]
+        self.speed *= self.handle_collisions(MovingDirection.Vertical)
+
+        self.rect.x += self.speed[0]
+        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+
+        self.window_correction()
+        self.window_collision()
+        self.old_rect = self.rect.copy()
+    
+
+
+
+class PlayerSquare(MovingSquare):
     def update(self, dt):
         keys = pg.key.get_pressed()
         if keys[pg.K_w]:
             self.rect.y -= self.speed[1] * dt
         if keys[pg.K_s]:
             self.rect.y += self.speed[1] * dt
+        self.handle_collisions(MovingDirection.Vertical)
+
         if keys[pg.K_a]:
             self.rect.x -= self.speed[0] * dt
         if keys[pg.K_d]:
             self.rect.x += self.speed[0] * dt
+        self.handle_collisions(MovingDirection.Horizontal)
 
         self.window_correction()
         self.old_rect = self.rect.copy()
 
 
-class PlayerSquare(Square):
-    pass
-
-
-class MovingSquare(Square):
-    pass
