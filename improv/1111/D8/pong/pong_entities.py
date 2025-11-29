@@ -109,6 +109,21 @@ class PongBot(PongEntity):
         dist_next = np.abs(self.rect.centerx - ball_next[0])
 
         return dist_next < dist_now
+    
+
+class PongBotAdvanced(PongBot):
+    def update(self):
+        pass #todo
+
+    @staticmethod
+    def intersect(location:tuple[int], vector:tuple[int], axis_x) -> float:
+        # x' = x + u1 * t -> t = (x' - x)/u1 (axis_x == x')
+        # y' = y + u2 * t
+        pass #todo
+
+    @staticmethod
+    def bound(y:float, lower_bound:int, upper_bound:int) -> float:
+        pass #todo
 
 
 class PongBall(PongEntity):
