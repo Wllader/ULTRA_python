@@ -30,7 +30,7 @@ gc = GameController()
 bg = pg.image.load("Sprites/Bg.png")
 bg = pg.transform.scale_by(bg, W / bg.get_width())
 
-player = PongPlayer(
+player = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (50, CENTER[1]),
@@ -62,10 +62,19 @@ ball = PongBall(
     BALL_SIZE,
     CENTER,
     BALL_SPEED,
-    WHITE
+    WHITE,
+    SpriteSheet(
+        "Sprites/Ball.png",
+        BALL_SIZE,
+        2
+    )
 )
 
+ball.sheet.add_animation("Shimmer", range(4))
+ball.sheet.set_animation("Shimmer", 1000)
+
 bot.ball = ball
+player.ball = ball
 
 
 g_paddles = pg.sprite.Group(
@@ -93,10 +102,7 @@ while gc.running:
     #Draw
     screen.fill(GREY * 28)
     screen.blit(bg, (0, 0))
-
     g_entities.draw(screen)
-    pg.draw.rect(screen, WHITE, player._rect, 1)
-
 
 
     pg.display.flip()

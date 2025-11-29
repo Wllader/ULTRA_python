@@ -31,7 +31,7 @@ class PongEntity(pg.sprite.Sprite):
     @property
     def image(self):
         if self.sheet:
-            self._image = self.sheet.get_image()
+            self._image = self.sheet.frame
         else:
             self._image.fill(self.color)
 
@@ -180,7 +180,7 @@ class PongBall(PongEntity):
     @property
     def image(self):
         if self.sheet:
-            self._image = self.sheet.get_image()
+            self._image = self.sheet.frame
         else:
             pg.draw.ellipse(self._image, self.color, self._image.get_rect())
 

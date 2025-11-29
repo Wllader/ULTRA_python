@@ -29,11 +29,32 @@ class SpriteSheet:
         return image
     
     def add_animation(self, name:str, frames:list[int]):
-        pass
+        self.animations[name.lower()] = np.array([ self.get_image(fi) for fi in frames ])
 
     def set_animation(self, name:str, frame_time:int=None):
-        pass
+        name = name.lower()
+        if name == self.animation_state: return
+        if frame_time is not None: self.frame_time = frame_time
+
+        self.animation_state = name
+        self.current_animation = self.animations[name]
+        self.frame_index = 0
+
 
     @property
     def frame(self):
-        pass
+        if not self.animation_state:
+            return self.get_image()
+        
+        self.current_frame_time += self.clock.tick()
+        # while self.current_frame_time >= self.frame_time:
+        #     self.current_frame_time -= self.frame_time
+        #     self.frame_index += 1
+        #     self.frame_index %= len(self.current_animation)
+
+        if self.current_frame_time >= self.frame_time:
+            index_diff = self.current_frame_time // self.frame_time
+            self.current_frame_time %= self.frame_time
+            self.frame_index = (self.frame_index + index_diff) % len(self.current_animation)
+
+        return self.current_animation[self.frame_index]
