@@ -29,7 +29,7 @@ class PongEntity(pg.sprite.Sprite, ABC):
             self._image = self.sheet.frame
 
         self.color = color
-        self.rect = self.image.get_rect(center=init_center_pos)
+        self.rect = self._image.get_rect(center=init_center_pos)
         self.speed = speed
 
         self.old_rect = self.rect.copy()
@@ -51,7 +51,9 @@ class PongEntity(pg.sprite.Sprite, ABC):
             self._image.fill(self.color)
         else:
             self._image = self.sheet.frame #new
+            self.rect = self._image.get_rect(center=self.rect.center)
         return self._image
+    
 
     def update(self):
         self.window_correction()
@@ -68,7 +70,8 @@ class PongEntity(pg.sprite.Sprite, ABC):
             self.rect.right = w
 
     @staticmethod
-    def intersect(vector:np.ndarray, location:np.ndarray, axis_x) -> float:
+    def intersect_implicit_func(vector:np.ndarray, location:np.ndarray, axis_x) -> float:
+        "This implementation uses Implicit function of a line"
         # ax + by + c = 0
         # c = -(ax + by): (-b, a) = ball_speed, (x, y) = ball_center
         # y = (ax + c)/(-b): (-b, a) = ball_speed, x = axis_x
@@ -80,7 +83,28 @@ class PongEntity(pg.sprite.Sprite, ABC):
         return y
     
     @staticmethod
+    def intersect(vector:np.ndarray, location:np.ndarray, axis_x) -> float:
+        "This implementation uses parametric description of a line"
+        # x' = x + u1*t -> t = (x' - x)/u1 [where x' == axis_x]
+        # y' = y + u2*t
+        t = (axis_x - location[0])/vector[0]
+        y = location[1] + vector[1]*t
+
+        return y
+    
+    @staticmethod
     def bound(y:float, lower_bound:int, upper_bound:int) -> float:
+        span = upper_bound - lower_bound
+
+        pos = (y - lower_bound) % (2*span)
+        if pos > span:
+            pos = 2*span - pos
+
+        return pos + lower_bound
+
+    @staticmethod
+    def _bound(y:float, lower_bound:int, upper_bound:int) -> float:
+        "This implementation is inefficient!"
         if y >= lower_bound and y <= upper_bound:
             return y
         
@@ -99,9 +123,7 @@ class PongEntity(pg.sprite.Sprite, ABC):
         # (1-t)*a + t*b = axis
         # (1-t)*a_y + t*b_y = axis_y
         # -> t = (axis-a)/(b-a)
-        
         t = ((axis - start)/(end - start))[index]
-
         return (1-t)*start + t*end, t
 
 
@@ -153,11 +175,18 @@ class PongBotAdvanced(PongBot):
 
         self.target = None
 
+    def _predict_ball_pos(self):
+        ball_half_width = self.ball.rect.width / 2
+        paddle_axis = self.rect.right + ball_half_width if self.ball.speed[0] < 0 else self.rect.left - ball_half_width
+
+        y = self.intersect(self.ball.speed, self.ball.rect.center, paddle_axis)
+        y = self.bound(y, 0, self.screen.get_height())
+
+        return y
+
     def update(self):
         if self.ball_moving_towards_me():
-            paddle_axis = self.rect.right + self.ball.rect.width / 2 if self.ball.speed[0] < 0 else self.rect.left - self.ball.rect.width / 2
-            y = self.intersect(self.ball.speed, self.ball.rect.center, paddle_axis)
-            y = self.bound(y, 0, self.screen.get_height())
+            y = self._predict_ball_pos()
             target = np.array([0, y], dtype=int)
 
         else:
@@ -183,6 +212,7 @@ class PongBall(PongEntity):
             pg.draw.ellipse(self._image, self.color, self._image.get_rect())
         else:
             self._image = self.sheet.frame #new
+            self.rect = self._image.get_rect(center=self.rect.center)
         return self._image
 
 
@@ -204,17 +234,20 @@ class PongBall(PongEntity):
             self.color = o.color
 
             if direction == MovingDirection.Horizontal:
-                if self.rect.left <= o.rect.right and self.old_rect.left >= o.rect.right:
-                    self.bounce(o.rect.right + self.rect.width / 2, 0)
-                elif self.rect.right >= o.rect.left and self.old_rect.right <= o.rect.left:
+                dx = self.rect.x - self.old_rect.x
+
+                if dx > 0: # We were moving RIGHT:
                     self.bounce(o.rect.left - self.rect.width / 2, 0)
-                
+                elif dx < 0: # We were moving LEFT:
+                    self.bounce(o.rect.right + self.rect.width / 2, 0)
 
             if direction == MovingDirection.Vertical:
-                if self.rect.top <= o.rect.bottom and self.old_rect.top >= o.rect.bottom:
-                    self.bounce(o.rect.bottom + self.rect.height / 2, 1)
-                elif self.rect.bottom >= o.rect.top and self.old_rect.bottom <= o.rect.top:
+                dy = self.rect.y - self.old_rect.y
+
+                if dy > 0: # We were moving DOWN:
                     self.bounce(o.rect.top - self.rect.height / 2, 1)
+                elif dy < 0: # We were moving UP:
+                    self.bounce(o.rect.bottom + self.rect.height / 2, 1)
 
     
     def window_correction(self):

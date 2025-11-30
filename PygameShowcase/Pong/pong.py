@@ -13,7 +13,7 @@ screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("Pong!")
 
 bg = pg.image.load("Sprites/Bg.png")
-bg = pg.transform.scale_by(bg, .78125)
+bg = pg.transform.scale_by(bg, W / bg.get_width())
 
 # Colors
 GREY = np.ones(3, dtype=np.uint8)
@@ -99,11 +99,10 @@ def score_counter():
 
 
 #! Game loop
-running = True
-while running:
+while gc.running:
     for event in pg.event.get():
         if event.type == pg.QUIT:
-            running = False
+            gc.stop()
 
 
     # Update game state

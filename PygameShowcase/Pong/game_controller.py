@@ -5,6 +5,8 @@ class GameController:
     def __init__(self):
         self.clock = Clock()
         self.dt = 0
+        self.running = True
+
         self.scores = array([0, 0])
 
     def __new__(self):
@@ -15,6 +17,9 @@ class GameController:
     
     def tick(self, fps:int, factor:int = 1):
         self.dt = self.clock.tick(fps) / factor
+
+    def stop(self):
+        self.running = False
 
     def score(self, player:int):
         self.scores[player] += 1
