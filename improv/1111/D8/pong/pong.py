@@ -32,7 +32,7 @@ bg = pg.transform.scale_by(bg, W / bg.get_width())
 
 font = pg.font.Font("freesansbold.ttf", 32)
 
-player = PongPlayer(
+player = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (50, CENTER[1]),
@@ -45,7 +45,20 @@ player = PongPlayer(
     )
 )
 
-bot = PongBotAdvanced(
+bot_0 = PongBot(
+    screen,
+    PADDLE_DIMS,
+    CENTER,
+    PADDLE_SPEED * .6,
+    (255, 0, 0),
+    SpriteSheet(
+        "Sprites/Paddle.png",
+        (5, 50),
+        2
+    )
+)
+
+bot_1 = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (W-50, CENTER[1]),
@@ -59,6 +72,7 @@ bot = PongBotAdvanced(
     )
 )
 
+
 ball = PongBall(
     screen,
     BALL_SIZE,
@@ -68,19 +82,19 @@ ball = PongBall(
     SpriteSheet(
         "Sprites/Ball.png",
         BALL_SIZE,
-        2
+        1
     )
 )
 
 ball.sheet.add_animation("Shimmer", range(4))
 ball.sheet.set_animation("Shimmer", 1000)
 
-bot.ball = ball
-# player.ball = ball
+for bot in [bot_0, bot_1, player]:
+    bot.ball = ball
 
 
 g_paddles = pg.sprite.Group(
-    player, bot
+    player, bot_0, bot_1,
 )
 
 ball.g_bounce.add(g_paddles)

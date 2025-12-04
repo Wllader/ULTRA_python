@@ -213,10 +213,10 @@ class PongBall(PongEntity):
 
     def update(self):
         self._rect.x += self.speed[0] * self.dt
-        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+        self.handle_collisions(MovingDirection.Horizontal)
 
         self._rect.y += self.speed[1] * self.dt
-        self.speed *= self.handle_collisions(MovingDirection.Vertical)
+        self.handle_collisions(MovingDirection.Vertical)
 
         self.window_correction()
         self.old_rect = self._rect.copy()
@@ -239,17 +239,27 @@ class PongBall(PongEntity):
             
 
     @staticmethod
-    def ccd(start:np.ndarray, end:np.ndarray, axis:float, index:int) -> tuple[np.ndarray, float]:
+    def ccd(start:tuple[int], end:tuple[int], axis:float, index:int) -> tuple[np.ndarray, float]:
         # a := start, b := end
         # (1-t)*a + t*b = axis
         # (1-t)*a_y + t*b_y = axis_y
         # -> t = (axis-a)/(b-a)
-        pass
+        start = np.array(start)
+        end = np.array(end)
+
+        t = ((axis-start)/(end-start))[index]
+        return (1-t)*start + t*end, t
 
 
     def bounce(self, axis:float, index:int):
         # Change direction based on CCD
-        pass
+        c, t = self.ccd(
+            self.old_rect.center, self.rect.center,
+            axis, index
+        )
+
+        self.speed[index] *= -1
+        self.rect.center = c + self.speed[index] * (1-t)
 
     def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
         if o := self._rect.collideobjects(list(self.g_bounce)):
@@ -259,24 +269,20 @@ class PongBall(PongEntity):
 
             match direction:
                 case MovingDirection.Horizontal:
-                    if self._rect.left <= o._rect.right and self.old_rect.left >= o._rect.right:
-                        self._rect.left = o._rect.right
-                        return np.array([-1, 1])
-                    
-                    if self._rect.right >= o._rect.left and self.old_rect.right <= o._rect.left:
-                        self._rect.right = o._rect.left
-                        return np.array([-1, 1])
+                    dx = self.rect.x - self.old_rect.x
+
+                    if dx > 0: # Right
+                        self.bounce(o.rect.left - self.rect.width / 2, 0)
+                    elif dx < 0: # Left
+                        self.bounce(o.rect.right + self.rect.width / 2, 0)
 
                 case MovingDirection.Vertical:
-                    if self._rect.top <= o._rect.bottom and self.old_rect.top >= o._rect.bottom:
-                        self._rect.top = o._rect.bottom
-                        return np.array([1, -1])
-                    
-                    if self._rect.bottom >= o._rect.top and self.old_rect.bottom <= o._rect.top:
-                        self._rect.bottom = o._rect.top
-                        return np.array([1, -1])
-                    
-        return np.array([1, 1])
+                    dy = self.rect.y - self.old_rect.y
+
+                    if dy > 0: # Down
+                        self.bounce(o.rect.top - self.rect.height / 2, 1)
+                    elif dy < 0: # Up
+                        self.bounce(o.rect.bottom + self.rect.height / 2, 1)
 
 
 
