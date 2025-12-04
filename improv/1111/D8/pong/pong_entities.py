@@ -126,11 +126,8 @@ class PongBotAdvanced(PongBot):
     def update(self):
         if self.ball is None: return
         if self.ball_moving_towards_me():
-            ball_half_width = self.ball._rect.width / 2
-            paddle_axis = self._rect.right + ball_half_width if self.ball.speed[0] < 0 else self._rect.left - ball_half_width
-            y = self.intersect(self.ball._rect.center, self.ball.speed, paddle_axis)
-            y = self.bound(y, 0, self.screen.get_height())
-            target = np.array([paddle_axis, y], dtype=int)
+            y = self.predict_ball_pos()
+            target = np.array([0, y], dtype=int)
 
         else:
             target = self.screen_center
@@ -143,8 +140,26 @@ class PongBotAdvanced(PongBot):
         self.old_rect = self.rect.copy()
 
 
-    def predict_ball_pos(self):
-        pass #todo Optimize!
+    def predict_ball_pos(self) -> float:
+            ball_half_width = self.ball._rect.width / 2
+            paddle_axis = self._rect.right + ball_half_width if self.ball.speed[0] < 0 else self._rect.left - ball_half_width
+            y = self.intersect(self.ball._rect.center, self.ball.speed, paddle_axis)
+            y = self.bound(y, 0, self.screen.get_height())
+            return y
+
+    @staticmethod
+    def intersect_implicit_func(location:tuple[int], vector:tuple[int], axis_x) -> float:
+        # ax + by + c = 0
+        # c = -(ax + by): (-b, a) = vector, (x, y) = location
+        # y = (ax + c)/(-b): (-b, a) = vector, x = axis_x
+        normal = vector.copy()[::-1]
+        normal[0] *= -1
+
+        c = -np.dot(normal, location)
+        y = (normal[0]*axis_x + c)/(-normal[1])
+
+        return y
+
 
     @staticmethod
     def intersect(location:tuple[int], vector:tuple[int], axis_x) -> float:
@@ -156,6 +171,16 @@ class PongBotAdvanced(PongBot):
 
     @staticmethod
     def bound(y:float, lower_bound:int, upper_bound:int) -> float:
+        span = upper_bound - lower_bound
+
+        pos = (y - lower_bound) % (2*span)
+        if pos > span:
+            pos = 2*span - pos
+
+        return pos + lower_bound
+
+    @staticmethod
+    def _bound(y:float, lower_bound:int, upper_bound:int) -> float:
         if y >= lower_bound and y <= upper_bound:
             return y
         
@@ -212,6 +237,19 @@ class PongBall(PongEntity):
             self.color = np.array([255, 255, 255])
             self.gc.score(1) if l else self.gc.score(0)
             
+
+    @staticmethod
+    def ccd(start:np.ndarray, end:np.ndarray, axis:float, index:int) -> tuple[np.ndarray, float]:
+        # a := start, b := end
+        # (1-t)*a + t*b = axis
+        # (1-t)*a_y + t*b_y = axis_y
+        # -> t = (axis-a)/(b-a)
+        pass
+
+
+    def bounce(self, axis:float, index:int):
+        # Change direction based on CCD
+        pass
 
     def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
         if o := self._rect.collideobjects(list(self.g_bounce)):
