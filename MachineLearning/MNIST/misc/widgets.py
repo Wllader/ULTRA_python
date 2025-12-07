@@ -57,11 +57,14 @@ class Widget(pg.sprite.Sprite):
     def center(self):
         return np.array(self._rect.center)
     
-    @staticmethod
-    def align_center(a:tuple, b:tuple):
-        a = np.array(a)
-        b = np.array(b)
-        return np.abs(a-b)//2
+
+    def align_center(self, other:pg.Surface) -> np.ndarray:
+        a = np.array(self.size)
+        b1 = np.array(other.size)
+        b2 = np.array(other.get_bounding_rect().size)
+        b = (b1+b2)/2
+        return np.abs(a-b)/2
+
     
     def click(self, button:int) -> ClickState:
         p = pg.mouse.get_pressed()[button]
@@ -98,7 +101,7 @@ class Label(Widget):
     @property
     def image(self):
         label = self.font.render(self.text, True, self.fg, self.bg)
-        pos = self.align_center(self.size, label.get_rect().size)
+        pos = self.align_center(label)
         self._image.blit(label, pos)
         return self._image
 
@@ -116,7 +119,7 @@ class Button(Widget):
     def image(self):
         self._image.fill(self.bg)
         label = self.font.render(self.text, True, self.fg)
-        pos = self.align_center(self.size, label.get_rect().size)
+        pos = self.align_center(label)
         self._image.blit(label, pos)
 
         if self.mouse_held[0]:
@@ -153,7 +156,7 @@ class Entry(Widget):
         else:
             label = self.font.render(self.tooltip, True, self.fg * .6)
 
-        pos = self.align_center(self.size, label.get_rect().size)
+        pos = self.align_center(label)
         self._image.blit(label, pos)
 
         if self.selected:
@@ -447,4 +450,4 @@ class BarPlot(Widget):
             label_surface = self.font.render(label_text, True, self.text_color)
             text_y = int(y + bar_height / 2 - label_surface.get_height() / 2)
             text_x = 5
-            self._image.blit(label_surface, (text_x, text_y))
+            self._image.blit(label_surface, (text_x, text_y + 3))
