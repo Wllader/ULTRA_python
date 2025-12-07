@@ -122,7 +122,6 @@ while gc.running:
 
     g_entities.draw(screen)
 
-
     pg.display.flip()
     gc.tick(144, 10)
 

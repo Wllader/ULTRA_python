@@ -5,8 +5,8 @@ from game_controller import GameController
 from spritesheet_sr_fc import SpriteSheet
 
 class MovingDirection(Enum):
-    Horizontal = auto()
-    Vertical = auto()
+    Horizontal = 0
+    Vertical = 1
 
 class PongEntity(pg.sprite.Sprite, ABC):
     def __init__(
@@ -29,10 +29,11 @@ class PongEntity(pg.sprite.Sprite, ABC):
             self._image = self.sheet.frame
 
         self.color = color
-        self.rect = self._image.get_rect(center=init_center_pos)
+        self.rect = self._image.get_frect(center=init_center_pos)
         self.speed = speed
 
         self.old_rect = self.rect.copy()
+        self.size_changed = True
 
     @property
     def dt(self):
@@ -51,7 +52,9 @@ class PongEntity(pg.sprite.Sprite, ABC):
             self._image.fill(self.color)
         else:
             self._image = self.sheet.frame #new
-            self.rect = self._image.get_rect(center=self.rect.center)
+            if self.size_changed:
+                self.rect = self._image.get_frect(center=self.rect.center)
+                self.size_changed = False
         return self._image
     
 
@@ -125,6 +128,53 @@ class PongEntity(pg.sprite.Sprite, ABC):
         # -> t = (axis-a)/(b-a)
         t = ((axis - start)/(end - start))[index]
         return (1-t)*start + t*end, t
+    
+    def ccd_collison(self, group:pg.sprite.Group) -> tuple[np.ndarray, float, MovingDirection] | None:
+        if len(group) == 0: return None
+        a = np.array(self.old_rect.center)
+        b = np.array(self.rect.center)
+        u = b - a
+
+        dx = u[0]
+        dy = u[1]
+
+        results = []
+        for sprite in group:
+            sprite:pg.sprite.Sprite
+            r = sprite.rect.inflate(*self.rect.size)
+            r_sides = [
+                (r.topleft, r.topright, MovingDirection.Vertical) if dy > 0 else
+                (r.bottomright, r.bottomleft, MovingDirection.Vertical),
+                (r.topright, r.bottomright, MovingDirection.Horizontal) if dx < 0 else
+                (r.bottomleft, r.topleft, MovingDirection.Horizontal)
+            ]
+            result_ts = []
+            for c, d, m in r_sides:
+                c = np.array(c)
+                d = np.array(d)
+
+                At = np.array((a-c, d-c)).T
+                B = np.array((a-b, d-c)).T
+
+                t = np.linalg.det(At) / np.linalg.det(B)
+                if t < 0 or t > 1 or np.isnan(t): continue
+
+                As = np.array((a-b, a-c)).T
+                s = np.linalg.det(As) / np.linalg.det(B)
+                if s < 0 or s > 1 or np.isnan(s): continue
+
+                result_ts.append((t, m))
+
+            if not result_ts: continue
+            t, direction = min(result_ts, key=lambda _t: _t[0])
+            col = a + t*u
+            results.append((col, t, direction))
+
+        res = None
+        if results:
+            res = min(results, key=lambda res: res[1])
+
+        return res
 
 
 class PongPlayer(PongEntity):
@@ -209,25 +259,24 @@ class PongBall(PongEntity):
     @property
     def image(self):
         if self.sheet is None:
-            pg.draw.ellipse(self._image, self.color, self._image.get_rect())
+            pg.draw.ellipse(self._image, self.color, self._image.get_frect())
         else:
-            self._image = self.sheet.frame #new
-            self.rect = self._image.get_rect(center=self.rect.center)
+            self._image = self.sheet.frame
+            if self.size_changed:
+                self.rect = self._image.get_frect(center=self.rect.center)
+                self.size_changed = False
         return self._image
 
 
     def update(self):
-        self.rect.x += self.speed[0] * self.dt
-        self.handle_collisions(MovingDirection.Horizontal)
-
-        self.rect.y += self.speed[1] * self.dt
-        self.handle_collisions(MovingDirection.Vertical)
+        self.rect.center += self.speed * self.dt
+        self.handle_collisions_continuous()
 
         self.window_correction()
 
         self.old_rect = self.rect.copy()
 
-    def handle_collisions(self, direction:MovingDirection):
+    def handle_collisions(self, direction:MovingDirection): #obsolete
         if (o := self.rect.collideobjects(list(self.g_bounce))) and o is not None:
             o:PongEntity
 
@@ -237,26 +286,33 @@ class PongBall(PongEntity):
                 dx = self.rect.x - self.old_rect.x
 
                 if dx > 0: # We were moving RIGHT:
-                    self.bounce(o.rect.left - self.rect.width / 2, 0)
+                    self.bounce_edge(o.rect.left - self.rect.width / 2, 0)
                 elif dx < 0: # We were moving LEFT:
-                    self.bounce(o.rect.right + self.rect.width / 2, 0)
+                    self.bounce_edge(o.rect.right + self.rect.width / 2, 0)
 
             if direction == MovingDirection.Vertical:
                 dy = self.rect.y - self.old_rect.y
 
                 if dy > 0: # We were moving DOWN:
-                    self.bounce(o.rect.top - self.rect.height / 2, 1)
+                    self.bounce_edge(o.rect.top - self.rect.height / 2, 1)
                 elif dy < 0: # We were moving UP:
-                    self.bounce(o.rect.bottom + self.rect.height / 2, 1)
+                    self.bounce_edge(o.rect.bottom + self.rect.height / 2, 1)
+
+    def handle_collisions_continuous(self):
+        if (ctd := self.ccd_collison(self.g_bounce)) and ctd is not None:
+            c, t, d = ctd
+
+            self.bounce(c, t, d.value)
+
 
     
     def window_correction(self):
         super().window_correction()
 
         if self.rect.top <= 0:
-            self.bounce(0 + self.rect.height / 2, 1)
+            self.bounce_edge(0 + self.rect.height / 2, 1)
         elif self.rect.bottom >= (h := self.screen.get_height()):
-            self.bounce(h - self.rect.height / 2, 1)
+            self.bounce_edge(h - self.rect.height / 2, 1)
 
         #? Respawn
         if (l := self.rect.left <= 0) or self.rect.right >= self.screen.get_width():
@@ -272,11 +328,15 @@ class PongBall(PongEntity):
             self.gc.score(1) if l else self.gc.score(0)
 
 
-    def bounce(self, axis:float, index:int):
+    def bounce_edge(self, axis:float, index:int):
         c, t = self.ccd(
             np.array(self.old_rect.center), np.array(self.rect.center),
             axis, index
         )
 
         self.speed[index] *= -1
-        self.rect.center = c + self.speed[index] * (1-t)
+        self.rect.center = c + self.speed * (1-t) * self.dt
+
+    def bounce(self, c, t, index:int):
+        self.speed[index] *= -1
+        self.rect.center = c + self.speed * (1-t) * self.dt
