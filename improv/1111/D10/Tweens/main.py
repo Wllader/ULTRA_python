@@ -53,6 +53,12 @@ while gc.running:
             )
         )
 
+    keys = pg.key.get_pressed()
+    if keys[pg.K_SPACE]:
+        for s in g_squares:
+            s:Square
+            s.change_position(pg.mouse.get_pos())
+
 
 
     #Draw

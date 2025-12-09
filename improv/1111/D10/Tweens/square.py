@@ -84,7 +84,11 @@ class Square(Entity):
 
         self._image.fill(self._color)
 
-        self.color_tween = Tween(1000)
+        self._center_pos = np.array(init_center_pos)
+        self._new_center_pos = self._center_pos.copy()
+
+        self.color_tween = Tween.EaseInOutBounce(1000, (0, 255))
+        self.pos_tween = Tween.EaseInOutExpo(1000)
 
 
     @property
@@ -93,18 +97,25 @@ class Square(Entity):
             self._color = self._new_color
             return self._color
         
-        if (self._color != self._new_color).any():
-            clr, finished = self.color_tween.get_state(self._color, self._new_color)
-            if finished:
-                self._color = self._new_color
-                return self._new_color
-            return clr
-        return self._color
+        return self.color_tween.tweenify(self._color, self._new_color)
 
     @property
     def image(self):
         self._image.fill(self.color)
         return self._image
+
+    @property
+    def center_pos(self):
+        if self.pos_tween is None:
+            self._center_pos = self._new_center_pos
+            return self._center_pos
+        
+        return self.pos_tween.tweenify(self._center_pos, self._new_center_pos)
+    
+    @property
+    def rect(self):
+        self._rect.center = self.center_pos
+        return self._rect
 
     def update(self):
         if self.click(1) == ClickState.CLICKED:
@@ -118,3 +129,9 @@ class Square(Entity):
         self._new_color = c
         if self.color_tween is not None:
             self.color_tween.reset()
+
+    def change_position(self, pos:tuple[int]):
+        self._center_pos = self.center_pos
+        self._new_center_pos = np.array(pos)
+        if self.pos_tween is not None:
+            self.pos_tween.reset()
