@@ -1,5 +1,9 @@
 import pygame as pg, numpy as np
+from enum import Enum, auto
 
+class MovingDirection(Enum):
+    Horizontal = auto()
+    Vertical = auto()
 
 class Entity(pg.sprite.Sprite):
     def __init__(self, screen:pg.Surface, init_pos:tuple[int], size:tuple[int], color:tuple[int] = (255, 255, 255)):
@@ -26,14 +30,36 @@ class Entity(pg.sprite.Sprite):
         if self.rect.right > (w := self.screen.width):
             self.rect.right = w
 
+    def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
+        pass
+
 
 class Square(Entity):
+    pass
+
+class MovingSquare(Square):
     def __init__(self, screen, init_pos, size, color = (255, 255, 255), speed:tuple[int]=None):
         super().__init__(screen, init_pos, size, color)
 
         self.speed = np.array(speed) if speed else np.array([5, 5])
 
+    def update(self, dt):
+        self.rect.x += self.speed[0] * dt
+        self.rect.y += self.speed[1] * dt
 
+        self.window_correction()
+        self.window_collision()
+
+    def window_collision(self):
+        if self.rect.top <= 0 or self.rect.bottom >= self.screen.height:
+            self.speed[1] *= -1
+
+        if self.rect.left <= 0 or self.rect.right >= self.screen.width:
+            self.speed[0] *= -1
+
+
+
+class PlayerSquare(MovingSquare):
     def update(self, dt):
         keys = pg.key.get_pressed()
         if keys[pg.K_RIGHT] or keys[pg.K_d]:
@@ -46,11 +72,4 @@ class Square(Entity):
             self.rect.y += self.speed[1] * dt
 
         self.window_correction()
-
-class MovingSquare(Square):
-    ...
-
-
-class PlayerSquare(Square):
-    ...
     
