@@ -19,28 +19,16 @@ screen = pg.display.set_mode(SIZE)
 pg.display.set_caption("My first game")
 clock = pg.time.Clock()
 
-p1 = Square(
+p = Square(
     screen,
     (0, 50),
     (100, 50),
     WHITE
 )
-p2 = Square(
-    screen,
-    (0, 150),
-    (100, 50),
-    (255, 0, 0)
-)
-p3 = Square(
-    screen,
-    (0, 300),
-    (100, 50),
-    (0, 255, 0)
-)
 
 
 g_squares = pg.sprite.Group(
-    p1, p2, p3
+    p
 )
 
 
@@ -64,6 +52,6 @@ while running:
 
 
     pg.display.flip()
-    dt = clock.tick(60) / 10
+    dt = clock.tick(144) / 10
 
 pg.quit()
