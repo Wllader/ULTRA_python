@@ -15,6 +15,9 @@ class Entity(pg.sprite.Sprite):
         self.image.fill(self.color)
 
         self.rect = self.image.get_frect(topleft=init_pos)
+        self.old_rect = self.rect.copy()
+
+        self.collision_group = pg.sprite.Group()
 
     def update(self, dt):
         super().update()
@@ -31,7 +34,33 @@ class Entity(pg.sprite.Sprite):
             self.rect.right = w
 
     def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
-        pass
+        if o := self.rect.collideobjects(list(self.collision_group)):
+            o:Entity
+
+            match direction:
+                case MovingDirection.Horizontal:
+                    dx = self.rect.x - self.old_rect.x
+
+                    if dx > 0: #Right
+                        self.rect.right = o.rect.left
+                        return np.array([-1, 1]) 
+                    elif dx < 0: #Left
+                        self.rect.left = o.rect.right
+                        return np.array([-1, 1]) 
+
+
+                case MovingDirection.Vertical:
+                    dy = self.rect.y - self.old_rect.y
+
+                    if dy > 0: #Down
+                        self.rect.bottom = o.rect.top
+                        return np.array([1, -1])    
+                    elif dy < 0: #Up
+                        self.rect.top = o.rect.bottom
+                        return np.array([1, -1])    
+
+                                 
+        return np.array([1, 1])
 
 
 class Square(Entity):
@@ -45,10 +74,15 @@ class MovingSquare(Square):
 
     def update(self, dt):
         self.rect.x += self.speed[0] * dt
+        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+        
         self.rect.y += self.speed[1] * dt
+        self.speed *= self.handle_collisions(MovingDirection.Vertical)
 
         self.window_correction()
         self.window_collision()
+
+        self.old_rect = self.rect.copy()
 
     def window_collision(self):
         if self.rect.top <= 0 or self.rect.bottom >= self.screen.height:
@@ -72,4 +106,6 @@ class PlayerSquare(MovingSquare):
             self.rect.y += self.speed[1] * dt
 
         self.window_correction()
+
+        self.old_rect = self.rect.copy()
     

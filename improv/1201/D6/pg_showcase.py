@@ -22,7 +22,7 @@ clock = pg.time.Clock()
 p = PlayerSquare(
     screen,
     (0, 50),
-    (100, 50),
+    (50, 50),
     WHITE
 )
 
@@ -39,6 +39,8 @@ s = Square(
     (50, 50),
     (255, 0, 0)
 )
+
+ms.collision_group.add(p, s)
 
 
 g_squares = pg.sprite.Group(
