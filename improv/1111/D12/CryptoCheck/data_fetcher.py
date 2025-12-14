@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, override
-import pandas as pd, requests, logging
+import pandas as pd, requests, logging, sqlite3
 
 class Fetcher(ABC):
     def __init__(self, api_endpoint:str):
@@ -12,6 +12,10 @@ class Fetcher(ABC):
     @abstractmethod
     def get(self, tick, params) -> pd.DataFrame|None:
         pass
+
+    def init_db(self, conn:sqlite3.Connection):
+        ... #todo
+        # ID, Tick, Price, Timestamp, Params (TEXT JSON), Expiration
 
 
 class CryptoFetcher(Fetcher):
@@ -41,6 +45,14 @@ class CryptoFetcher(Fetcher):
 
     @override
     def get(self, tick, params) -> pd.DataFrame|None:
+        #todo
+        # Check if data with these params are in db
+        # If yes: Return those (formatted?)
+        # If not:
+        #   Fetch from remote API (Coingecko)
+        #   Format
+        #   Save to DB
+        #   Return
         data = self.fetch_data(params)
         if not self.check_data(data): return
         data = self.format_data(data)
