@@ -2,7 +2,7 @@ import customtkinter as ctk
 from typing import Any
 
 import logging
-from data_fetcher import Fetcher, CryptoFetcher
+import requests
 from input_frame import TickerType
 
 import pandas as pd
@@ -46,23 +46,24 @@ class PlotFrame(ctk.CTkFrame):
         self.slider_label.configure(text=f"Adjust Number of days: {int(value)}")
 
     def fetch_data(self, symbol, days) -> pd.DataFrame|None:
-        f: Fetcher
-
         match self.type:
             case TickerType.COIN:
-                url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
+                url = f"http://127.0.0.1:8000/coin/{symbol}"
                 params = {
                     "vs_currency" : "usd",
                     "days" : days
                 }
-                f = CryptoFetcher(url)
+                response = requests.get(url, params)
 
             case TickerType.SHARE:
                 self.logger.warning("Not implemented")
                 return None
-                f = ShareFetcher(...)
+                url = f"http://127.0.0.1:8000/share/{symbol}"
 
-        return f.get(symbol, params)
+        data = pd.DataFrame(response.json())
+        data["Timestamp"] = pd.to_datetime(data["Timestamp"], format="ISO8601")
+
+        return data
 
 
     def update_plot(self, symbol:str, days:int):

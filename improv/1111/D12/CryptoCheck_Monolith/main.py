@@ -1,5 +1,6 @@
 import customtkinter as ctk
 from typing import Callable
+import logging
 
 from input_frame import InputFrame
 from plot_frame import PlotFrame
@@ -48,6 +49,8 @@ class CryptoCheck(ctk.CTk):
         self.quit()
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     app = CryptoCheck()
     app.mainloop()
 
