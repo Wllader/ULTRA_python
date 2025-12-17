@@ -259,7 +259,7 @@ class PongBall(PongEntity):
         )
 
         self.speed[index] *= -1
-        self.rect.center = c + self.speed[index] * (1-t)
+        self.rect.center = c + self.speed * (1-t)
 
     def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
         if o := self._rect.collideobjects(list(self.g_bounce)):
