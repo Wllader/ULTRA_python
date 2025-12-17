@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from pong_entities import PongPlayer, PongBot, PongBall
 from game_controller import GameController
+from spritesheet_sr_fc import SpriteSheet
 
 
 
@@ -34,7 +35,12 @@ player = PongBot(
     PADDLE_DIMS,
     (50, CENTER[1]),
     PADDLE_SPEED,
-    (0, 255, 0)
+    (0, 255, 0),
+    SpriteSheet(
+        "Sprites/Paddle.png",
+        (5, 50),
+        2
+    )
 )
 
 bot = PongBot(
@@ -42,7 +48,13 @@ bot = PongBot(
     PADDLE_DIMS,
     (W-50, CENTER[1]),
     PADDLE_SPEED,
-    (255, 0, 0)
+    (255, 0, 0),
+    SpriteSheet(
+        "Sprites/Paddle.png",
+        (5, 50),
+        2,
+        1
+    )
 )
 
 ball = PongBall(
@@ -50,7 +62,12 @@ ball = PongBall(
     BALL_SIZE,
     CENTER,
     BALL_SPEED,
-    WHITE
+    WHITE,
+    SpriteSheet(
+        "Sprites/Ball.png",
+        (16, 16),
+        1
+    )
 )
 
 bot.ball = ball
@@ -83,7 +100,6 @@ while gc.running:
     screen.fill(GREY * 28)
     screen.blit(bg, (0, 0))
     g_entities.draw(screen)
-
 
 
     pg.display.flip()

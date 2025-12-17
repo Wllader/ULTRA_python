@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from enum import Enum, auto
 from game_controller import GameController
+from spritesheet_sr_fc import SpriteSheet
 
 #Todo Vytvořit základní PongEntity
 #Todo odvodit od ní PongPlayer, PongBot a PongBall objekty
@@ -12,9 +13,10 @@ class MovingDirection(Enum):
 
 
 class PongEntity(pg.sprite.Sprite):
-    def __init__(self, screen:pg.Surface, size:tuple[int], init_center_pos:tuple[int], speed:tuple[int], color:tuple[int] = (255, 255, 255)):
+    def __init__(self, screen:pg.Surface, size:tuple[int], init_center_pos:tuple[int], speed:tuple[int], color:tuple[int] = (255, 255, 255), spritesheet:SpriteSheet=None):
         super().__init__()
         self.gc = GameController()
+        self.sheet = spritesheet
 
         self.size = np.array(size)
         self.speed = np.array(speed)
@@ -24,13 +26,16 @@ class PongEntity(pg.sprite.Sprite):
         self._image = pg.Surface(size, pg.SRCALPHA)
         self._image.fill(self.color)
 
-        self.rect = self._image.get_frect(center=np.array(init_center_pos))
+        self.rect = self._image.get_frect(center=init_center_pos)
         self.old_rect = self.rect.copy()
 
     @property
     def image(self):
+        if self.sheet:
+            self._image = self.sheet.get_image()
+            self.rect = self._image.get_frect(center=self.rect.center)
         return self._image
-    
+
     @property
     def dt(self):
         return self.gc.dt
@@ -69,8 +74,8 @@ class PongPlayer(PongEntity):
 
 
 class PongBot(PongEntity):
-    def __init__(self, screen, size, init_center_pos, speed, color = (255, 255, 255)):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color = (255, 255, 255), spritesheet:SpriteSheet=None):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self.ball:PongEntity = None
 
@@ -102,8 +107,8 @@ class PongBot(PongEntity):
         return dist_next < dist_now
 
 class PongBall(PongEntity): #todo Handle collisions (bouncing)
-    def __init__(self, screen, size, init_center_pos, speed, color = (255, 255, 255)):
-        super().__init__(screen, size, init_center_pos, speed, color)
+    def __init__(self, screen, size, init_center_pos, speed, color = (255, 255, 255), spritesheet:SpriteSheet=None):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
         self._image.fill((0, 0, 0, 0))
         pg.draw.ellipse(self._image, self.color, self._image.get_frect())
@@ -112,8 +117,11 @@ class PongBall(PongEntity): #todo Handle collisions (bouncing)
 
     @property
     def image(self):
-        self._image.fill((0, 0, 0, 0))
-        pg.draw.ellipse(self._image, self.color, self._image.get_frect())
+        if self.sheet:
+            self._image = self.sheet.get_image()
+        else:
+            self._image.fill((0, 0, 0, 0))
+            pg.draw.ellipse(self._image, self.color, self._image.get_frect())
         return self._image
 
     def update(self):
