@@ -17,6 +17,25 @@ logger = logging.getLogger(__name__)
 gc = GameController()
 
 plot = Plot(screen, (10, 60), (W-20, H-70))
+def plot_function(tick, days, gran=50):
+    if tick=="random":
+        d = np.linspace(-5, 5, days*150)
+        plot.set_data(np.sin(d*(days/100) + np.random.rand() * 2*np.pi), gran)
+        plot.move_particles()
+        return
+    
+    logger.info("Fetching!")
+    response = requests.get(f"http://localhost:8000/coin/{tick}?{days=}")
+    d = response.json()
+    if "Price" in d:
+        logger.info("Passed")
+        d = pd.DataFrame(d)
+
+        plot.set_data(d["Price"].to_numpy(float), gran)
+        plot.move_particles()
+
+    else:
+        logger.warning(f"Failed: {tick}")
 
 
 e_tick = Entry(screen, (10, 10), (150, 40), default_text="random", placeholder_text="Coin tick")
@@ -30,7 +49,9 @@ g_entries = pg.sprite.Group(
 
 
 g_widgets = pg.sprite.Group(
-    Button(screen, (360, 10), (150, 40), text="Click me!"),
+    Button(screen, (360, 10), (150, 40), text="Click me!", command=lambda:plot_function(
+        e_tick.text, int(e_days.text), int(e_gran.text)
+    )),
     g_entries,
     plot
 )

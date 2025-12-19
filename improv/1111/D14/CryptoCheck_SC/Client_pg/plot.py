@@ -19,8 +19,8 @@ class Particle(Widget):
         self._center_pos = np.array(self._rect.center)
         self._new_center_pos = self._center_pos.copy()
 
-        self.color_tween = Tween.EaseInOutExpo(1000, clipped=(0, 255))
-        self.pos_tween = Tween.EaseOutSine(1000)
+        self.color_tween = Tween.EaseInOutExpo(np.random.randint(500, 1500), clipped=(0, 255))
+        self.pos_tween = Tween.EaseInOutExpo(np.random.randint(500, 1500))
 
     @property
     def rect(self):
