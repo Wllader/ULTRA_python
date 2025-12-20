@@ -200,19 +200,23 @@ class PongBall(PongEntity):
 
     def update(self):
         self.rect.x += self.speed[0] * self.dt
-        self.speed *= self.handle_collisions(MovingDirection.Horizontal)
+        self.handle_collisions(MovingDirection.Horizontal)
 
         self.rect.y += self.speed[1] * self.dt
-        self.speed *= self.handle_collisions(MovingDirection.Vertical)
+        self.handle_collisions(MovingDirection.Vertical)
 
         self.window_correction()
         self.old_rect = self.rect.copy()
 
     def window_correction(self):
-        super().window_correction()
+        # super().window_correction()
+        half_height = self.rect.height / 2
 
-        if self.rect.top <= 0 or self.rect.bottom >= self.screen.height:
-            self.speed[1] *= -1
+        if self.rect.top <= 0:
+            self.bounce(0 + half_height, 1)
+        
+        elif self.rect.bottom >= self.screen.height:
+            self.bounce(self.screen.height - half_height, 1)
 
         if (l := self.rect.left <= 0) or self.rect.right >= self.screen.width:
             self.speed[0] *= -1
@@ -224,19 +228,30 @@ class PongBall(PongEntity):
 
             # self.gc.score(1) if l else self.gc.score(0)
             self.gc.score(int(l))
-            
+
+    @staticmethod   
     def ccd(start:tuple[int], end:tuple[int], known:float, axis:int) -> tuple[np.ndarray, float]:
         # a := start, b := end
         # (1-t)*a + t*b = known
         # (1-t)*a_y + t*b_y = known_y
         # -> t = (known-a)/(b-a)
-        ...
+        a = np.array(start)
+        b = np.array(end)
+
+        t = ((known-a)/(b-a))[axis]
+        return (1-t)*a + t*b, t
 
     def bounce(self, known:float, axis:int):
         # Change direction based on CCD
-        ...
+        c, t = self.ccd(
+            self.old_rect.center, self.rect.center,
+            known, axis
+        )
 
-    def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
+        self.speed[axis] *= -1
+        self.rect.center = c + self.speed * (1-t) * self.dt
+
+    def handle_collisions(self, direction:MovingDirection):
         if o := self.rect.collideobjects(list(self.g_bounce)):
             o:PongEntity
             self.color = o.color
@@ -244,22 +259,19 @@ class PongBall(PongEntity):
             match direction:
                 case MovingDirection.Horizontal:
                     dx = self.rect.x - self.old_rect.x
+                    half_width = self.rect.width / 2
 
                     if dx > 0: #Rigth
-                        self.rect.right = o.rect.left
-                        return np.array([-1, 1])
+                        self.bounce(o.rect.left - half_width, 0)
+
                     elif dx < 0: #Left
-                        self.rect.left = o.rect.right
-                        return np.array([-1, 1])
-                        
+                        self.bounce(o.rect.right + half_width, 0)
+
                 case MovingDirection.Vertical:
                     dy = self.rect.y - self.old_rect.y
+                    half_height = self.rect.height / 2
 
                     if dy > 0: #Down
-                        self.rect.bottom = o.rect.top
-                        return np.array([1, -1])
+                        self.bounce(o.rect.top - half_height, 1)
                     elif dy < 0: #Up
-                        self.rect.top = o.rect.bottom
-                        return np.array([1, -1])
-
-        return np.array([1, 1])
+                        self.bounce(o.rect.bottom + half_height, 1)

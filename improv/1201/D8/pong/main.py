@@ -45,7 +45,7 @@ player = PongBotAdvanced(
     )
 )
 
-bot = PongBot(
+bot = PongBotAdvanced(
     screen,
     PADDLE_DIMS,
     (W-50, CENTER[1]),
