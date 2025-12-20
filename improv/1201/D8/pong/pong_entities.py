@@ -107,8 +107,26 @@ class PongBot(PongEntity):
         return dist_next < dist_now
     
 class PongBotAdvanced(PongBot):
+    def __init__(self, screen, size, init_center_pos, speed, color=(255, 255, 255), spritesheet = None):
+        super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
+
+        self.chached_pos = self.screen_center
+
     def update(self):
-        pass
+        if self.ball is None: return
+        if self.ball_moving_towards_me():
+            y = self.predict_ball_pos()
+            target = (0, int(y))
+
+        else:
+            target = self.screen_center
+
+        if np.abs(target[1] - self.chached_pos[1]) >= self.rect.height / 2:
+            self.chached_pos = target
+
+        self.drift_towards(self.chached_pos)
+        self.window_correction()
+        self.old_rect = self.rect.copy()
 
     def predict_ball_pos(self) -> float:
         ball_half_width = self.ball.rect.width / 2
