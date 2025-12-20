@@ -214,14 +214,27 @@ class PongBall(PongEntity):
         if self.rect.top <= 0 or self.rect.bottom >= self.screen.height:
             self.speed[1] *= -1
 
-        if self.rect.left <= 0 or self.rect.right >= self.screen.width:
+        if (l := self.rect.left <= 0) or self.rect.right >= self.screen.width:
             self.speed[0] *= -1
             self.color = (255, 255, 255)
             self.rect.center = (
                 self.screen_center[0],
                 np.random.randint(0, self.screen.height)
             )
-            #todo Score
+
+            # self.gc.score(1) if l else self.gc.score(0)
+            self.gc.score(int(l))
+            
+    def ccd(start:tuple[int], end:tuple[int], known:float, axis:int) -> tuple[np.ndarray, float]:
+        # a := start, b := end
+        # (1-t)*a + t*b = known
+        # (1-t)*a_y + t*b_y = known_y
+        # -> t = (known-a)/(b-a)
+        ...
+
+    def bounce(self, known:float, axis:int):
+        # Change direction based on CCD
+        ...
 
     def handle_collisions(self, direction:MovingDirection) -> np.ndarray:
         if o := self.rect.collideobjects(list(self.g_bounce)):

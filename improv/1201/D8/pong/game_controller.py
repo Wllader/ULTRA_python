@@ -20,3 +20,11 @@ class GameController:
 
     def stop(self):
         self.running = False
+
+    def score(self, player:int):
+        self.scores[player] += 1
+
+    def get_score(self, player:int=None):
+        if player is None:
+            return self.scores
+        return self.scores[player]
