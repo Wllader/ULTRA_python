@@ -111,27 +111,58 @@ class PongBotAdvanced(PongBot):
         pass
 
     def predict_ball_pos(self) -> float:
-        pass
+        ball_half_width = self.ball.rect.width / 2
+        paddle_axis = self.rect.right + ball_half_width if self.ball.speed[0] < 0 else self.rect.left - ball_half_width
+        y = self.intersect(self.ball.rect.center, self.ball.speed, paddle_axis)
+        y = self.bound(y, 0, self.screen.height)
+        return y
 
     @staticmethod
     def intersect(location:tuple[int], vector:tuple[int], x_hat) -> float:
         # (u1, u2) = vector, (x, y) = location
-        # x' = x + u1 * t -> t = (x' - x_hat)/u1
+        # x' = x + u1 * t -> t = (x_hat - x)/u1
         # y' = y + u2 * t
-        pass
+        t = (x_hat - location[0])/vector[0]
+        y = location[1] + vector[1] * t
+        return y
 
     @staticmethod
     def intersect_implicit_func(location:tuple[int], vector:tuple[int], x_hat) -> float:
         # ax + by + c = 0
         # c -> -(ax + by): (-b, a) = vector, (x, y) = location
         # y' = (ax_hat + c)/(-b)
-        ...
+        normal = np.array(vector[::-1])
+        normal[0] *= -1
+
+        c = -np.dot(normal, location)
+        y = (normal[0] * x_hat + c)/(-normal[1])
+        return y
 
     @staticmethod
     def bound(y:float, lower_bound:int, upper_bound:int) -> float:
-        ...
+        #neefektivní bound
+        if y >= lower_bound and y <= upper_bound:
+            return y
+        
+        if y < lower_bound:
+            y0 = np.abs(lower_bound - y)
+            return PongBotAdvanced.bound(y + 2*y0, lower_bound, upper_bound)
+        
+        if y > upper_bound:
+            y0 = np.abs(upper_bound - y)
+            return PongBotAdvanced.bound(y - 2*y0, lower_bound, upper_bound)
 
-class PongBall(PongEntity): #todo Handle collisions (bouncing)
+    @staticmethod
+    def bound(y:float, lower_bound:int, upper_bound:int) -> float:
+        span = upper_bound - lower_bound
+
+        pos = (y - lower_bound) % (2*span)
+        if pos > span:
+            pos = 2*span - pos
+
+        return pos + lower_bound
+
+class PongBall(PongEntity):
     def __init__(self, screen, size, init_center_pos, speed, color = (255, 255, 255), spritesheet:SpriteSheet=None):
         super().__init__(screen, size, init_center_pos, speed, color, spritesheet)
 
