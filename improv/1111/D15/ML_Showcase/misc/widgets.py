@@ -85,8 +85,12 @@ class Widget(pg.sprite.Sprite):
         
         return ClickState.UNKNOWN
     
-    def disable(self): self.enabled = False
-    def enable(self): self.enabled = True
+    def disable(self):
+        self.enabled = False
+        return self
+    def enable(self):
+        self.enabled = True
+        return self
 
 
 class Label(Widget):

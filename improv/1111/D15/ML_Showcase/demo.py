@@ -24,22 +24,34 @@ X_train = get_data(FileType.TrainImage)
 y_train = get_data(FileType.TrainLabel)
 
 canvas = Canvas(screen, (10, 50), (280, 280))
+canvas_show = Canvas(screen, (300, 50), (280, 280)).disable()
 
 barplot_adr = BarPlot(screen, (10, 370), (300, 300), data, labels, fg=(100, 220, 100))
 barplot_csr = BarPlot(screen, (320, 370), (300, 300), data, labels, fg=(100, 220, 100))
+barplot_mlr = BarPlot(screen, (630, 370), (300, 300), data, labels, fg=(100, 220, 100))
+barplot_mlp = BarPlot(screen, (940, 370), (300, 300), data, labels, fg=(100, 220, 100))
 
 btn_clear = Button(screen, (10, 10), (100, 30), "Clear", command=canvas.clear)
 btn_random = Button(screen, (120, 10), (100, 30), "Random", 
                     command=lambda: canvas.from_array(X_test[np.random.randint(0, X_test.shape[0])]))
 
+chbx_centerd = CheckBox(screen, (230, 10), (30, 30))
+
 g_widgets = pg.sprite.Group(
-    canvas,
-    barplot_adr, barplot_csr,
-    btn_clear, btn_random
+    canvas, canvas_show,
+    barplot_adr, barplot_csr, barplot_mlr, barplot_mlp,
+    btn_clear, btn_random, chbx_centerd
 )
 
 adr = AverageDistanceRecognizer(X_train, y_train)
 csr = CosineSimilarityRecognizer(X_train, y_train)
+mlr = MulticlassLogisticRegression(X_train, y_train)
+mlp = MultilayerPerceptronRecognizer(
+    X_train,
+    y_train,
+    (16, 16),
+    batch_size=8
+)
 
 
 #! Game loop
@@ -51,8 +63,14 @@ while gc.running:
             #Update
             g_widgets.update(event)
 
-    barplot_adr.set_data(adr.predict(canvas.get_array()))
-    barplot_csr.set_data(csr.predict(canvas.get_array()))
+    canvas_show.from_array(
+        canvas.get_centered_image() if chbx_centerd.get() else canvas.get_array()
+    )
+
+    barplot_adr.set_data(adr.predict(canvas_show.get_array()))
+    barplot_csr.set_data(csr.predict(canvas_show.get_array()))
+    barplot_mlr.set_data(mlr.predict(canvas_show.get_array()))
+    barplot_mlp.set_data(mlp.predict(canvas_show.get_array()))
 
     #Draw
     screen.fill(GREY * 56)
