@@ -1,8 +1,8 @@
 import pygame as pg, numpy as np
 from enum import Enum, auto
 from typing import Callable
-from game_controller import GameController
-from tween import Tween
+from misc.game_controller import GameController
+from misc.tween import Tween
 from scipy.ndimage import center_of_mass, shift
 
 GREY = np.ones(3, dtype=np.uint8)
@@ -368,45 +368,44 @@ class Canvas(Widget):
 
 class BarPlot(Widget):
     def __init__(self, screen, pos, size,
-                 data: np.ndarray,
+                 data:np.ndarray,
                  labels=None,
-                 fg=WHITE, bg=GREY * 40, border_color=GREY * 90,
-                 text_color=WHITE,
+                 fg=WHITE, bg=GREY*40,
                  bar_margin=2,
                  font=None,
                  tween=None,
-                 color_gradient: np.ndarray = None):
+                 color_gradient:np.ndarray = None):
         super().__init__(screen, pos, size)
 
         self._data = np.array(data, dtype=float)
         self._target_data = self._data.copy()
-        self.labels = list(labels) if labels is not None else [f"{i}" for i in range(len(data))]
+        self.labels = list(labels) if labels is not None else [f"{i}" for i in range(len(self._data))]
 
-        self.bg = np.array(bg, dtype=np.uint8)
-        self.border_color = np.array(border_color, dtype=np.uint8)
-        self.text_color = np.array(text_color, dtype=np.uint8)
+        self.bg = bg
+        self.fg = fg
         self.bar_margin = bar_margin
 
-        # default gradient: same color (no change)
-        self.color_gradient = np.array(color_gradient if color_gradient is not None
-                                       else [[152, 204, 106], [224, 47, 91]], dtype=float)
+        self.color_gradient = color_gradient or np.array(
+            [[152, 204, 106], [224, 47, 91]], dtype=float
+        )
 
-        self.font = font or pg.font.SysFont("Calibri", int(self.size[1] / len(self._data) * 0.7))
-        self.tween = tween or Tween.EaseOutSine(1000, clipped=(0.0, 1.0))
+        self.font = font or pg.font.SysFont("Calibri", int(self.size[1]/ len(self._data) * 0.7))
+        self.tween = tween or Tween.EaseOutSine(1000, clipped=(0., 1.))
 
         self.dirty = True
 
-    # ------------------------------------------------------------
-    # Animation property
-    # ------------------------------------------------------------
+    @property
+    def image(self):
+        self._image.fill(self.bg)
+        self._draw_bars()
+        pg.draw.rect(self._image, WHITE, (0, 0, *self.size), 1)
+        return self._image
+
     @property
     def data(self) -> np.ndarray:
-        """Current display data (animated toward target)."""
         return self.tween.tweenify(self._data, self._target_data)
-
-    def set_data(self, new_data: np.ndarray, labels=None):
-        """Set new target values (and optionally labels) to animate toward."""
-        new_data = np.array(new_data, dtype=float)
+    
+    def set_data(self, new_data:np.ndarray, labels=None):
         if not np.allclose(new_data, self._target_data):
             self._data = self.data
             self._target_data = new_data
@@ -416,37 +415,24 @@ class BarPlot(Widget):
             self.labels = list(labels)
             self.font = self.font or pg.font.SysFont("Calibri", int(self.size[1] / len(self._data) * 0.7))
 
-    # ------------------------------------------------------------
-    # Rendering
-    # ------------------------------------------------------------
-    @property
-    def image(self):
-        self._image.fill(self.bg)
-        self._draw_bars()
-        pg.draw.rect(self._image, self.border_color, self._image.get_rect(), 1)
-        return self._image
-
     def _draw_bars(self):
-        vals = np.clip(self.data, 0, 1) 
+        vals = np.clip(self.data, 0, 1)
 
         n = len(vals)
         w, h = self.size
         bar_height = h / n
 
-        c0, c1 = self.color_gradient  # shape (3,)
+        c0, c1 = self.color_gradient
         for i, (val, label_text) in enumerate(zip(vals, self.labels)):
-            # Compute interpolated color
-            color = ((1 - val) * c0 + val * c1).astype(np.uint8)
+            color = ((1-val)*c0 + val*c1).astype(np.uint8)
 
             bar_len = int(val * (w - self.bar_margin * 2))
             y = int(i * bar_height)
-            rect = pg.Rect(self.bar_margin, y + self.bar_margin,
-                           bar_len, bar_height - self.bar_margin * 2)
+            rect = pg.Rect(self.bar_margin, y+self.bar_margin, bar_len, bar_height-self.bar_margin*2)
 
             pg.draw.rect(self._image, color, rect)
 
-            # Label (fixed left side)
-            label_surface = self.font.render(label_text, True, self.text_color)
+
+            label_surface = self.font.render(label_text, True, WHITE)
             text_y = int(y + bar_height / 2 - label_surface.get_height() / 2)
-            text_x = 5
-            self._image.blit(label_surface, (text_x, text_y + 3))
+            self._image.blit(label_surface, (5, text_y))
