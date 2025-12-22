@@ -1,6 +1,7 @@
 import pygame as pg, numpy as np
 from game_controller import GameController
 from spritesheet_mr_d import SpriteSheet
+from game_entities import Dino
 
 pg.init()
 
@@ -14,6 +15,21 @@ pg.display.set_caption("Dinos!")
 gc = GameController()
 
 
+d = Dino(
+    screen,
+    (18, 18),
+    (100, 50),
+    SpriteSheet(
+        "Dinos.png",
+        (22, 18),
+        5
+    )
+)
+
+g_dinos = pg.sprite.Group(
+    d
+)
+
 
 #! GameLoop
 while gc.running:
@@ -21,13 +37,12 @@ while gc.running:
         if event.type == pg.QUIT:
             gc.stop()
 
-    
     #Update
+    g_dinos.update()
 
     #Draw
     screen.fill(GREY * 28)
-
-
+    g_dinos.draw(screen)
 
     pg.display.flip()
     gc.tick(144, 10)
