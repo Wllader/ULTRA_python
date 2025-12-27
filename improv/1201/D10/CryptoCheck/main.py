@@ -1,0 +1,3 @@
+
+
+# Main CryptoCheck CustomTkInter application
