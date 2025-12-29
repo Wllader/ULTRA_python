@@ -1,4 +1,4 @@
-import customtkinter as ctk
+import customtkinter as ctk, logging
 from typing import Callable
 
 from input_frame import InputFrame
@@ -25,7 +25,7 @@ class CryptoCheck(ctk.CTk):
         if name == "" or name.isspace(): return
 
         tab = self.tab_view.add(name)
-        pf = PlotFrame(tab, name)
+        pf = PlotFrame(tab, name, self.input_frame.type)
         pf.update_plot(name, self.input_frame.days)
 
         pf.pack()
@@ -48,5 +48,7 @@ class CryptoCheck(ctk.CTk):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
     app = CryptoCheck()
     app.mainloop()

@@ -1,15 +1,19 @@
-import customtkinter as ctk, requests
+import customtkinter as ctk, requests, logging
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg as FigC
 from typing import Any
 import pandas as pd
+from data_fetcher import Fetcher, CryptoFetcher
+from input_frame import TickerType
 
 
 class PlotFrame(ctk.CTkFrame):
-    def __init__(self, master, symbol:str, **kwargs):
+    def __init__(self, master, symbol:str, type_:TickerType=TickerType.COIN, **kwargs):
         super().__init__(master, **kwargs)
 
         self.symbol = symbol
+        self.type = type_
+        self.logger = logging.getLogger(self.__class__.__name__)
 
         self.canvas_frame = ctk.CTkFrame(self)
         self.canvas_frame.pack(fill="both", expand=True)
@@ -22,6 +26,8 @@ class PlotFrame(ctk.CTkFrame):
         self.days_slider.pack(padx=10, pady=10)
 
         ctk.CTkButton(self, text="Refresh", command=lambda: self.update_plot(self.symbol, self.days)).pack()
+
+        self.crypto_fetcher:CryptoFetcher = None
 
         plt.style.use("https://github.com/dhaitz/matplotlib-stylesheets/raw/master/pitayasmoothie-dark.mplstyle")
 
@@ -37,34 +43,57 @@ class PlotFrame(ctk.CTkFrame):
         self.days_slider.set(value)
         self.slider_label.configure(text=f"Adjust Number of days: {int(value)}")
 
-    def fetch_crypto_data(self, symbol, days) -> dict[str, Any]:
-        url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
-        params = {
-            "vs_currency" : "usd",
-            "days" : days
-        }
+    #region Old fetching
+    # def fetch_crypto_data(self, symbol, days) -> dict[str, Any]:
+    #     url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
+    #     params = {
+    #         "vs_currency" : "usd",
+    #         "days" : days
+    #     }
 
-        response = requests.get(url, params)
-        return response.json()
+    #     response = requests.get(url, params)
+    #     return response.json()
     
-    def fetch_crypto_data_v2(self, symbol, days) -> pd.DataFrame|None:
-        data = self.fetch_crypto_data(symbol, days)
-        if "status" in data:
-            print(data["status"])
-            return
+    # def fetch_crypto_data_v2(self, symbol, days) -> pd.DataFrame|None:
+    #     data = self.fetch_crypto_data(symbol, days)
+    #     if "status" in data:
+    #         print(data["status"])
+    #         return
         
-        if "error" in data:
-            print(data["error"])
-            return
+    #     if "error" in data:
+    #         print(data["error"])
+    #         return
         
-        df = pd.DataFrame()
-        df["Timestamp"], df["Price"] = zip(*data["prices"])
-        df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms")
+    #     df = pd.DataFrame()
+    #     df["Timestamp"], df["Price"] = zip(*data["prices"])
+    #     df["Timestamp"] = pd.to_datetime(df["Timestamp"], unit="ms")
 
-        return df
+    #     return df
+    #endregion
+
+    def fetch_data(self, symbol, days) -> pd.DataFrame|None:
+        f: Fetcher
+
+        match self.type:
+            case TickerType.COIN:
+                if self.crypto_fetcher is None:
+                    self.crypto_fetcher = CryptoFetcher()
+
+                f = self.crypto_fetcher
+                params = {
+                    "vs_currency" : "usd",
+                    "days" : days
+                }
+
+            case TickerType.SHARE:
+                self.logger.warning("Not implemented")
+                return None
+
+
+        return f.get(symbol, params)
 
     def update_plot(self, symbol:str, days:int):
-        df = self.fetch_crypto_data_v2(symbol, days)
+        df = self.fetch_data(symbol, days)
 
         if df is None:
             return
@@ -77,6 +106,7 @@ class PlotFrame(ctk.CTkFrame):
         ax.set_xlabel("Date")
         ax.set_ylabel("Price (USD)")
         ax.set_title(f"{symbol.capitalize()} price History of last {days} days")
+        ax.tick_params("x", rotation=60)
         ax.grid(True)
 
         fig.tight_layout()
