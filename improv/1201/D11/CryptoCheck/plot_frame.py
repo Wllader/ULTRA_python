@@ -77,7 +77,7 @@ class PlotFrame(ctk.CTkFrame):
         match self.type:
             case TickerType.COIN:
                 if self.crypto_fetcher is None:
-                    self.crypto_fetcher = CryptoFetcher()
+                    self.crypto_fetcher = CryptoFetcher("cache.db")
 
                 f = self.crypto_fetcher
                 params = {
