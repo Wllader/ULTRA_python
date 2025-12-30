@@ -21,5 +21,5 @@ def test2(item:str, color:str, count:int=1):
 
 @app.get("/coin/{coin_id}")
 def get_coin(coin_id:str, vs_currency:str="usd", days:int=5):
-    fetcher = CryptoFetcher("cache_db")
+    fetcher = CryptoFetcher("cache.db")
     return fetcher.get_json(coin_id, {"days": days, "vs_currency":vs_currency})
